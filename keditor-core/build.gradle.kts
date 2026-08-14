@@ -33,7 +33,7 @@ mavenPublishing {
 
     signAllPublications()
 
-    coordinates(group.toString(), "library", version.toString())
+    coordinates(group.toString(), "keditor", version.toString())
 
     pom {
         name = "KEditor"

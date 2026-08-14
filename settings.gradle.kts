@@ -1,4 +1,10 @@
+include(":keditor-ffmpeg")
+
+enableFeaturePreview("TYPESAFE_PROJECT_ACCESSORS")
+
 pluginManagement {
+    includeBuild("gradle/build-logic")
+
     repositories {
         google()
         mavenCentral()
@@ -15,7 +21,5 @@ dependencyResolutionManagement {
 
 rootProject.name = "KEditor"
 
-include(":library")
-
-
+include(":keditor-core")
 include(":samples:sample-android")

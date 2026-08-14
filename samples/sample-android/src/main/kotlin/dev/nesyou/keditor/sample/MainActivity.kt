@@ -4,6 +4,7 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import dev.nesyou.keditor.VideoEditor
 
 class MainActivity : ComponentActivity() {
 
@@ -12,7 +13,13 @@ class MainActivity : ComponentActivity() {
 
         super.onCreate(savedInstanceState)
 
+        val editor = VideoEditor()
+
+        println(editor.ffmpegVersion())
+        println(editor.ffmpegMajorVersion())
+
         setContent {
+
 
         }
     }
