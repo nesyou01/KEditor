@@ -5,14 +5,14 @@ plugins {
 }
 
 android {
-    namespace = "com.nesyou.keditor.sample"
+    namespace = "dev.nesyou.keditor.sample"
 
     compileSdk {
         version = release(libs.versions.android.compileSdk.get().toInt())
     }
 
     defaultConfig {
-        applicationId = "com.nesyou.keditor.sample"
+        applicationId = "dev.nesyou.keditor.sample"
 
 
         minSdk = libs.versions.android.minSdk.get().toInt()

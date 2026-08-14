@@ -1,4 +1,4 @@
-package com.nesyou.keditor.sample
+package dev.nesyou.keditor.sample
 
 import android.os.Bundle
 import androidx.activity.ComponentActivity
