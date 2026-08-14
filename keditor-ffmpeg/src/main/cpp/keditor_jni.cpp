@@ -7,6 +7,7 @@ extern "C" {
 #include <libavcodec/avcodec.h>
 #include <libavformat/avformat.h>
 #include <libavfilter/avfilter.h>
+#include <libavutil/avutil.h>
 }
 
 #define LOG_TAG "KVideoKit"
@@ -15,7 +16,7 @@ extern "C" {
 
 extern "C"
 JNIEXPORT jstring JNICALL
-Java_dev_nesyou_keditor_VideoEditor_nativeGetFFmpegVersion(
+Java_dev_nesyou_keditor_ffmpeg_VideoEditor_nativeGetFFmpegVersion(
         JNIEnv* env,
         jobject /* thiz */) {
 
@@ -26,7 +27,7 @@ Java_dev_nesyou_keditor_VideoEditor_nativeGetFFmpegVersion(
 
 extern "C"
 JNIEXPORT jint JNICALL
-Java_dev_nesyou_keditor_VideoEditor_nativeGetFFmpegMajorVersion(
+Java_dev_nesyou_keditor_ffmpeg_VideoEditor_nativeGetFFmpegMajorVersion(
         JNIEnv* env,
         jobject /* thiz */) {
 

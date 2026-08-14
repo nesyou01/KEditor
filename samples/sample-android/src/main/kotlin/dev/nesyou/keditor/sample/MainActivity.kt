@@ -4,7 +4,12 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import dev.nesyou.keditor.VideoEditor
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
+import androidx.compose.ui.Modifier
+import dev.nesyou.keditor.ffmpeg.VideoEditor
 
 class MainActivity : ComponentActivity() {
 
@@ -15,12 +20,16 @@ class MainActivity : ComponentActivity() {
 
         val editor = VideoEditor()
 
-        println(editor.ffmpegVersion())
-        println(editor.ffmpegMajorVersion())
-
         setContent {
 
-
+            Scaffold {padding->
+                Column(
+                    modifier = Modifier.padding(padding)
+                ) {
+                    Text(editor.ffmpegVersion())
+                    Text(editor.ffmpegMajorVersion().toString())
+                }
+            }
         }
     }
 

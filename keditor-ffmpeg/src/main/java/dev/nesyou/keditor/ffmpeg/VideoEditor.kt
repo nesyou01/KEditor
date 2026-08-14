@@ -1,4 +1,4 @@
-package dev.nesyou.keditor
+package dev.nesyou.keditor.ffmpeg
 
 class VideoEditor {
 

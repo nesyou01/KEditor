@@ -12,7 +12,6 @@ add_library(
         keditor_jni.cpp
 )
 
-# FFmpeg headers
 target_include_directories(
         keditor
         PRIVATE

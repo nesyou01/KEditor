@@ -23,7 +23,15 @@ kotlin {
     iosArm64()
 
     sourceSets {
-        commonMain.dependencies {
+        androidMain {
+            dependencies {
+                api(projects.keditorFfmpeg)
+            }
+        }
+
+        commonMain {
+            dependencies {
+            }
         }
     }
 }
