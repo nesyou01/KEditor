@@ -14,4 +14,8 @@ dependencyResolutionManagement {
 }
 
 rootProject.name = "KEditor"
+
 include(":library")
+
+
+include(":samples:sample-android")
