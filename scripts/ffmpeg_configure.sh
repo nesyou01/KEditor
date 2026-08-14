@@ -30,7 +30,16 @@ case "$PLATFORM" in
         RANLIB="$TOOLCHAIN/llvm-ranlib"
         STRIP="$TOOLCHAIN/llvm-strip"
 
-        PREFIX="$PWD/native/ffmpeg/android/${ARCH}"
+        case "$ARCH" in
+            aarch64)
+                ANDROID_ABI="arm64-v8a"
+                ;;
+            x86_64)
+                ANDROID_ABI="x86_64"
+                ;;
+        esac
+
+        PREFIX="$PWD/native/ffmpeg/android/$ANDROID_ABI"
 
         CONFIGURE_EXTRA=(
             --enable-jni
