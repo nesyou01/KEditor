@@ -1,5 +1,5 @@
 plugins {
-    id("com.android.application")
+    id("dev.nesyou.android.app")
     id("org.jetbrains.compose")
     id("org.jetbrains.kotlin.plugin.compose")
 }
@@ -7,24 +7,11 @@ plugins {
 android {
     namespace = "dev.nesyou.keditor.sample"
 
-    compileSdk {
-        version = release(libs.versions.android.compileSdk.get().toInt())
-    }
-
     defaultConfig {
         applicationId = "dev.nesyou.keditor.sample"
 
-
-        minSdk = libs.versions.android.minSdk.get().toInt()
-        targetSdk = libs.versions.android.targetSdk.get().toInt()
-
         versionCode = 1
         versionName = "1.0"
-    }
-
-    compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_17
-        targetCompatibility = JavaVersion.VERSION_17
     }
 }
 

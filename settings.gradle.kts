@@ -23,3 +23,4 @@ rootProject.name = "KEditor"
 
 include(":keditor-core")
 include(":samples:sample-android")
+include(":samples:sample-kmp")
