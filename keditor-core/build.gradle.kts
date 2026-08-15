@@ -1,4 +1,6 @@
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+import org.jetbrains.kotlin.gradle.plugin.mpp.KotlinNativeTarget
+import org.jetbrains.kotlin.konan.target.KonanTarget
 
 plugins {
     alias(libs.plugins.kotlinMultiplatform)
@@ -21,6 +23,30 @@ kotlin {
     }
 
     iosArm64()
+
+    targets
+        .filterIsInstance<KotlinNativeTarget>()
+        .filter {
+            it.konanTarget == KonanTarget.IOS_ARM64 ||
+                    it.konanTarget == KonanTarget.IOS_SIMULATOR_ARM64
+        }
+        .forEach { target ->
+            target.compilations.getByName("main") {
+                cinterops {
+                    create("keditor") {
+                        definitionFile.set(
+                            project.file(
+                                "src/iosMain/cinterop/ffmpeg.def"
+                            )
+                        )
+
+                        compilerOpts(
+                            "-I${project.file("src/iosMain/cpp").absolutePath}"
+                        )
+                    }
+                }
+            }
+        }
 
     sourceSets {
         androidMain {
