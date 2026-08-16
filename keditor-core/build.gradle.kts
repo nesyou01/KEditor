@@ -1,5 +1,4 @@
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
-import org.jetbrains.kotlin.gradle.plugin.mpp.KotlinNativeTarget
 import org.jetbrains.kotlin.konan.target.KonanTarget
 
 plugins {
@@ -22,31 +21,36 @@ kotlin {
         }
     }
 
-    iosArm64()
+    val iosTargets = listOf(
+        iosArm64(),
+        iosSimulatorArm64()
+    )
 
-    targets
-        .filterIsInstance<KotlinNativeTarget>()
-        .filter {
-            it.konanTarget == KonanTarget.IOS_ARM64 ||
-                    it.konanTarget == KonanTarget.IOS_SIMULATOR_ARM64
+    iosTargets.forEach { target ->
+        val ffmpegDir = when (target.konanTarget) {
+            KonanTarget.IOS_ARM64 ->
+                project.file("../native/ffmpeg/darwin/iphoneos/arm64")
+
+            KonanTarget.IOS_SIMULATOR_ARM64 ->
+                project.file("../native/ffmpeg/darwin/iphonesimulator/arm64")
+
+            else -> error("Unsupported target")
         }
-        .forEach { target ->
-            target.compilations.getByName("main") {
-                cinterops {
-                    create("keditor") {
-                        definitionFile.set(
-                            project.file(
-                                "src/iosMain/cinterop/ffmpeg.def"
-                            )
-                        )
 
-                        compilerOpts(
-                            "-I${project.file("src/iosMain/cpp").absolutePath}"
-                        )
-                    }
+        target.compilations.getByName("main") {
+            cinterops {
+                create("keditor") {
+                    extraOpts("-libraryPath", ffmpegDir.resolve("lib").absolutePath)
+
+                    definitionFile.set(
+                        project.file("src/iosMain/cinterop/keditor.def")
+                    )
+
+                    includeDirs(ffmpegDir.resolve("include"))
                 }
             }
         }
+    }
 
     sourceSets {
         androidMain {

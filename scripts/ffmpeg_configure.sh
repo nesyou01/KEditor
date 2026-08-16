@@ -157,6 +157,8 @@ CONFIGURE_ARGS+=("${CONFIGURE_EXTRA[@]}")
 
 cd third-party/ffmpeg
 
+make distclean || true
+
 ./configure "${CONFIGURE_ARGS[@]}"
 
 # ── Build ────────────────────────────────────────────────────────────────────

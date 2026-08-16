@@ -9,9 +9,7 @@
 extern "C" {
 #endif
 
-const char* kffmpeg_get_version(void);
-
-int kffmpeg_get_major_version(void);
+const char* test_func();
 
 #ifdef __cplusplus
 }

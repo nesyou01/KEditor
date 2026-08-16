@@ -5,13 +5,9 @@
 #include "keditor.h"
 
 extern "C" {
-    #include "libavutil/avutil.h"
+//    #include "libavutil/avutil.h"
 }
 
-const char* kffmpeg_get_version() {
-    return av_version_info();
-}
-
-int kffmpeg_get_major_version() {
-    return AV_VERSION_MAJOR(LIBAVUTIL_VERSION_INT);
+const char* test_func() {
+    return "asdasd";
 }
