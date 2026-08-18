@@ -36,17 +36,30 @@ kotlin {
 
             else -> error("Unsupported target")
         }
+        val x264Dir = when (target.konanTarget) {
+            KonanTarget.IOS_ARM64 ->
+                project.file("../native/x264/darwin/iphoneos/arm64")
+
+            KonanTarget.IOS_SIMULATOR_ARM64 ->
+                project.file("../native/x264/darwin/iphonesimulator/arm64")
+
+            else -> error("Unsupported target")
+        }
 
         target.compilations.getByName("main") {
             cinterops {
                 create("keditor") {
+                    extraOpts("-libraryPath", x264Dir.resolve("lib").absolutePath)
                     extraOpts("-libraryPath", ffmpegDir.resolve("lib").absolutePath)
 
                     definitionFile.set(
                         project.file("src/iosMain/cinterop/keditor.def")
                     )
 
-                    includeDirs(ffmpegDir.resolve("include"))
+                    includeDirs(
+                        ffmpegDir.resolve("include"),
+                        x264Dir.resolve("include")
+                    )
                 }
             }
         }

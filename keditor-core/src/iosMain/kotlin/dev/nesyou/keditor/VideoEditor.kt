@@ -2,6 +2,7 @@ package dev.nesyou.keditor
 
 import keditor.AVFormatContext
 import keditor.av_version_info
+import keditor.avcodec_find_encoder_by_name
 import keditor.avformat_close_input
 import keditor.avformat_open_input
 import kotlinx.cinterop.CPointerVar
@@ -19,42 +20,27 @@ class VideoEditor {
 
     fun test(path: String) {
         memScoped {
-            val context = alloc<CPointerVar<AVFormatContext>>()
+            val x264 = avcodec_find_encoder_by_name("libx264")
 
-            val result = avformat_open_input(
-                context.ptr,
-                path,
-                null,
-                null
-            )
-
-            println("avformat_open_input result = $result")
-
-            if (result < 0) {
-                println("Failed to open video")
-                return
-            }
-
-            val formatContext = context.value!!
-
-            println("Opened successfully!")
-            println("Format: ${formatContext.pointed.iformat?.pointed?.name?.toKString()}")
-            println("Streams: ${formatContext.pointed.nb_streams}")
-
-            for (i in 0 until formatContext.pointed.nb_streams.toInt()) {
-                val stream = formatContext.pointed.streams!![i]!!
-                val codecPar = stream.pointed.codecpar!!
+            if (x264 == null) {
+                println("❌ libx264 NOT found")
+            } else {
+                println("✅ libx264 found!")
 
                 println(
-                    "Stream $i: " +
-                            "codec_type=${codecPar.pointed.codec_type}, " +
-                            "codec_id=${codecPar.pointed.codec_id}, " +
-                            "width=${codecPar.pointed.width}, " +
-                            "height=${codecPar.pointed.height}"
+                    "Encoder: ${
+                        x264.pointed.name?.toKString()
+                    }"
+                )
+
+                println("Long name: ${x264.pointed.long_name?.toKString()}")
+
+                println(
+                    "ID: ${x264.pointed.id}"
                 )
             }
 
-            avformat_close_input(context.ptr)
+
         }
     }
 

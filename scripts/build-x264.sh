@@ -1,5 +1,4 @@
 #!/usr/bin/env bash
-
 set -euo pipefail
 
 # ── Defaults ────────────────────────────────────────────────────────────────
@@ -18,64 +17,50 @@ JOBS="${JOBS:-$(sysctl -n hw.ncpu 2>/dev/null || nproc 2>/dev/null || echo 4)}"
 case "$PLATFORM" in
 
     android)
-
-        TARGET_OS="android"
-
         TRIPLE="${ARCH}-linux-android${API_LEVEL}"
-
-        CC="$TOOLCHAIN/${TRIPLE}-clang"
-        CXX="$TOOLCHAIN/${TRIPLE}-clang++"
-
-        AR="$TOOLCHAIN/llvm-ar"
-        RANLIB="$TOOLCHAIN/llvm-ranlib"
-        STRIP="$TOOLCHAIN/llvm-strip"
+        export CC="$TOOLCHAIN/${TRIPLE}-clang"
 
         case "$ARCH" in
             aarch64)
                 ANDROID_ABI="arm64-v8a"
+                HOST="aarch64-linux-android"
                 ;;
             x86_64)
                 ANDROID_ABI="x86_64"
+                HOST="x86_64-linux-android"
+                ;;
+            *)
+                echo "Unsupported Android architecture: $ARCH"
+                exit 1
                 ;;
         esac
 
-        PREFIX="$PWD/native/ffmpeg/android/$ANDROID_ABI"
+        PREFIX="$PWD/native/x264/android/$ANDROID_ABI"
 
         CONFIGURE_EXTRA=(
-            --enable-jni
-            --enable-mediacodec
-            --enable-neon
+            --sysroot=""
+            # FIX: cross-prefix is correct for Android (llvm-ar, llvm-ranlib, etc.)
+            --cross-prefix="$TOOLCHAIN/llvm-"
         )
-
         ;;
 
     darwin)
-
-        TARGET_OS="darwin"
-
         : "${SDK:?SDK must be set for Darwin (iphoneos or iphonesimulator)}"
-
         SDK_PATH="$(xcrun --sdk "$SDK" --show-sdk-path)"
 
         case "$ARCH" in
-            arm64)
-                ;;
-            x86_64)
-                ;;
+            arm64)  HOST="aarch64-apple-darwin"  ;;
+            x86_64) HOST="x86_64-apple-darwin"   ;;
             *)
                 echo "Unsupported Darwin architecture: $ARCH"
                 exit 1
                 ;;
         esac
 
-        CC="$(xcrun --sdk "$SDK" --find clang)"
-        CXX="$(xcrun --sdk "$SDK" --find clang++)"
+        export CC="$(xcrun --sdk "$SDK" --find clang)"
+        export AS="$(xcrun --sdk "$SDK" --find clang)"
 
-        AR="$(xcrun --sdk "$SDK" --find ar)"
-        RANLIB="$(xcrun --sdk "$SDK" --find ranlib)"
-        STRIP="$(xcrun --sdk "$SDK" --find strip)"
-
-        PREFIX="$PWD/native/ffmpeg/darwin/${SDK}/${ARCH}"
+        PREFIX="$PWD/native/x264/darwin/${SDK}/${ARCH}"
 
         if [[ "$SDK" == "iphoneos" ]]; then
             MIN_FLAG="-mios-version-min=${MIN_IOS}"
@@ -83,26 +68,26 @@ case "$PLATFORM" in
             MIN_FLAG="-mios-simulator-version-min=${MIN_IOS}"
         fi
 
-        CFLAGS=(
-            "-arch"
-            "$ARCH"
-            "-isysroot"
-            "$SDK_PATH"
-            "$MIN_FLAG"
-        )
-
-        LDFLAGS=(
-            "-arch"
-            "$ARCH"
-            "-isysroot"
-            "$SDK_PATH"
-            "$MIN_FLAG"
-        )
+        BASE_FLAGS="-arch $ARCH -isysroot $SDK_PATH $MIN_FLAG"
+        export ASFLAGS="$BASE_FLAGS"
 
         CONFIGURE_EXTRA=(
-            --enable-neon
-        )
+            --sysroot="$SDK_PATH"
+            --extra-cflags="$BASE_FLAGS"
+            --extra-ldflags="$BASE_FLAGS"
+            --extra-asflags="$BASE_FLAGS -arch $ARCH"
+            --as="$AS"
+            --disable-svink
 
+            # FIX: Do NOT set --cross-prefix for Darwin — xcrun tools are used
+            # directly via CC/AS exports above. Setting --cross-prefix causes
+            # x264's configure to look for "${cross-prefix}pkg-config" (e.g.
+            # "$TOOLCHAIN/llvm-pkg-config") which doesn't exist, producing:
+            #   ERROR: x264 not found using pkg-config
+            # Instead, point --pkg-config at the real binary explicitly.
+            --pkg-config="$(command -v pkg-config)"
+            --pkg-config-flags="--static"
+        )
         ;;
 
     *)
@@ -110,7 +95,6 @@ case "$PLATFORM" in
         echo "Supported platforms: android, darwin"
         exit 1
         ;;
-
 esac
 
 # ── Clean previous build ────────────────────────────────────────────────────
@@ -119,59 +103,28 @@ rm -rf "$PREFIX"
 
 # ── Configure ────────────────────────────────────────────────────────────────
 
-CONFIGURE_ARGS=(
-    --target-os="$TARGET_OS"
-    --arch="$ARCH"
-    --enable-cross-compile
-
-    --cc="$CC"
-    --cxx="$CXX"
-    --ar="$AR"
-    --ranlib="$RANLIB"
-    --strip="$STRIP"
-
-    --disable-programs
-    --disable-doc
-    --disable-debug
-
-    --disable-shared
-    --enable-static
-    --enable-pic
-
-    --prefix="$PREFIX"
-)
-
-# Darwin-specific flags
-if [[ "$PLATFORM" == "darwin" ]]; then
-
-    CONFIGURE_ARGS+=(
-        --sysroot="$SDK_PATH"
-        --extra-cflags="${CFLAGS[*]}"
-        --extra-ldflags="${LDFLAGS[*]}"
-    )
-
-fi
-
-# Add platform-specific options
-CONFIGURE_ARGS+=("${CONFIGURE_EXTRA[@]}")
-
-cd third-party/ffmpeg
+cd third-party/x264
 
 make distclean || true
 
-./configure "${CONFIGURE_ARGS[@]}"
+./configure \
+    --prefix="$PREFIX" \
+    --host="$HOST" \
+    --enable-static \
+    --enable-pic \
+    --disable-cli \
+    "${CONFIGURE_EXTRA[@]}"
 
 # ── Build ────────────────────────────────────────────────────────────────────
 
 make -j"$JOBS"
-
 make install
 
-rm -rf "$PREFIX"/share "$PREFIX"/lib/pkgconfig
+rm -rf "$PREFIX/share"
 
 echo
 echo "========================================"
-echo "FFmpeg build completed"
+echo "x264 build completed"
 echo "Platform : $PLATFORM"
 echo "Arch     : $ARCH"
 echo "Output   : $PREFIX"

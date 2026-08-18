@@ -3,7 +3,9 @@ headers =       libavutil/avutil.h \
                 libavformat/avformat.h \
                 libavfilter/avfilter.h \
                 libswscale/swscale.h \
-                libswresample/swresample.h
+                libswresample/swresample.h \
+                x264.h \
+                x264_config.h
 
 headerFilter =  libavutil/* \
                 libavcodec/* \
@@ -18,7 +20,7 @@ linkerOpts =     -liconv \
                  -framework CoreVideo \
                  -framework VideoToolbox \
                  -framework AVFoundation \
-                 -framework CoreFoundation \
+                 -framework CoreFoundation
 
 
 staticLibraries = libavcodec.a \
@@ -27,4 +29,5 @@ staticLibraries = libavcodec.a \
                   libavformat.a \
                   libavutil.a \
                   libswresample.a \
-                  libswscale.a
+                  libswscale.a \
+                  libx264.a
