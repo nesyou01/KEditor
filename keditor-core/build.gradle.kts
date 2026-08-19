@@ -1,9 +1,9 @@
-import org.jetbrains.kotlin.gradle.dsl.JvmTarget
-import org.jetbrains.kotlin.konan.target.KonanTarget
+import dev.nesyou.gradle.conventions.utils.createKEditor
 
 plugins {
     alias(libs.plugins.kotlinMultiplatform)
-    alias(libs.plugins.android.kotlin.multiplatform.library)
+    id("dev.nesyou.kmp.library")
+
     alias(libs.plugins.vanniktech.mavenPublish)
 }
 
@@ -13,67 +13,17 @@ version = "1.0.0"
 kotlin {
     android {
         namespace = "dev.nesyou.keditor"
-        compileSdk = libs.versions.android.compileSdk.get().toInt()
-        minSdk = libs.versions.android.minSdk.get().toInt()
-
-        compilerOptions {
-            jvmTarget = JvmTarget.JVM_17
-        }
     }
 
-    val iosTargets = listOf(
+    listOf(
         iosArm64(),
         iosSimulatorArm64()
-    )
-
-    iosTargets.forEach { target ->
-        val ffmpegDir = when (target.konanTarget) {
-            KonanTarget.IOS_ARM64 ->
-                project.file("../native/ffmpeg/darwin/iphoneos/arm64")
-
-            KonanTarget.IOS_SIMULATOR_ARM64 ->
-                project.file("../native/ffmpeg/darwin/iphonesimulator/arm64")
-
-            else -> error("Unsupported target")
-        }
-        val x264Dir = when (target.konanTarget) {
-            KonanTarget.IOS_ARM64 ->
-                project.file("../native/x264/darwin/iphoneos/arm64")
-
-            KonanTarget.IOS_SIMULATOR_ARM64 ->
-                project.file("../native/x264/darwin/iphonesimulator/arm64")
-
-            else -> error("Unsupported target")
-        }
-
-        target.compilations.getByName("main") {
-            cinterops {
-                create("keditor") {
-                    extraOpts("-libraryPath", x264Dir.resolve("lib").absolutePath)
-                    extraOpts("-libraryPath", ffmpegDir.resolve("lib").absolutePath)
-
-                    definitionFile.set(
-                        project.file("src/iosMain/cinterop/keditor.def")
-                    )
-
-                    includeDirs(
-                        ffmpegDir.resolve("include"),
-                        x264Dir.resolve("include")
-                    )
-                }
-            }
-        }
-    }
+    ).forEach(::createKEditor)
 
     sourceSets {
         androidMain {
             dependencies {
                 api(projects.keditorFfmpeg)
-            }
-        }
-
-        commonMain {
-            dependencies {
             }
         }
     }
