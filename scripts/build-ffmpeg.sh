@@ -106,44 +106,27 @@ case "$PLATFORM" in
         CFLAGS=(
             "-arch"
             "$ARCH"
-
             "-isysroot"
             "$SDK_PATH"
-
             "$MIN_FLAG"
-
-            "-fPIC"
-
             "-I$X264_PREFIX/include"
         )
 
         LDFLAGS=(
             "-arch"
             "$ARCH"
-
             "-isysroot"
             "$SDK_PATH"
-
             "$MIN_FLAG"
-
             "-L$X264_PREFIX/lib"
         )
 
-        # Force PIC
-        export CFLAGS="${CFLAGS[*]}"
-        export CXXFLAGS="${CFLAGS[*]}"
-
         CONFIGURE_EXTRA=(
             --enable-neon
-
             --enable-gpl
             --enable-libx264
-
-            --enable-pic
-
-            --extra-cflags="${CFLAGS[*]}"
-            --extra-cxxflags="${CFLAGS[*]}"
-            --extra-ldflags="${LDFLAGS[*]}"
+            --extra-cflags="-I$X264_PREFIX/include"
+            --extra-ldflags="-L$X264_PREFIX/lib"
         )
 
         ;;
@@ -226,12 +209,11 @@ CONFIGURE_ARGS=(
 
 if [[ "$PLATFORM" == "darwin" ]]; then
 
-    CONFIGURE_ARGS+=(
-        --sysroot="$SDK_PATH"
-        --extra-cflags="${CFLAGS[*]}"
-        --extra-cxxflags="${CXXFLAGS}"
-        --extra-ldflags="${LDFLAGS[*]}"
-    )
+     CONFIGURE_ARGS+=(
+         --sysroot="$SDK_PATH"
+         --extra-cflags="${CFLAGS[*]}"
+         --extra-ldflags="${LDFLAGS[*]}"
+     )
 
 fi
 
