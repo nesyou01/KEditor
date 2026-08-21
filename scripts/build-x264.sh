@@ -39,7 +39,6 @@ case "$PLATFORM" in
 
         CONFIGURE_EXTRA=(
             --sysroot=""
-            # FIX: cross-prefix is correct for Android (llvm-ar, llvm-ranlib, etc.)
             --cross-prefix="$TOOLCHAIN/llvm-"
         )
         ;;
