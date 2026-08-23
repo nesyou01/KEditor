@@ -120,6 +120,11 @@ echo "Building FFmpeg for iOS Simulator arm64..."
 )
 
 echo
+echo "Running setup-keditor.sh..."
+
+"$ROOT_DIR/scripts/setup-keditor.sh"
+
+echo
 echo "========================================"
 echo "All targets built successfully"
 echo "========================================"

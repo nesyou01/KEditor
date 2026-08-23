@@ -12,4 +12,6 @@ xcuserdata
 #So we don't accidentally commit our private keys
 *.gpg
 
-native
+native/ffmpeg
+native/x264
+native/keditor/lib

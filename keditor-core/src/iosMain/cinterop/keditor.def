@@ -5,14 +5,8 @@ headers =       libavutil/avutil.h \
                 libswscale/swscale.h \
                 libswresample/swresample.h \
                 x264.h \
-                x264_config.h
+                keditor.h
 
-headerFilter =  libavutil/* \
-                libavcodec/* \
-                libavformat/* \
-                libavfilter/* \
-                libswscale/* \
-                libswresample/*
 
 linkerOpts =     -liconv \
                  -framework AudioToolbox \
@@ -30,4 +24,5 @@ staticLibraries = libavcodec.a \
                   libavutil.a \
                   libswresample.a \
                   libswscale.a \
-                  libx264.a
+                  libx264.a \
+                  libkeditor.a

@@ -22,12 +22,14 @@ private fun KotlinNativeTarget.nativeDir(dir: String) =
 fun createKEditor(taget: KotlinNativeTarget) {
     val ffmpegDir = taget.nativeDir("ffmpeg")
     val x264Dir = taget.nativeDir("x264")
+    val keditor = taget.nativeDir("keditor/lib")
 
     taget.compilations.getByName("main") {
         cinterops {
             create("keditor") {
                 extraOpts("-libraryPath", x264Dir.resolve("lib").absolutePath)
                 extraOpts("-libraryPath", ffmpegDir.resolve("lib").absolutePath)
+                extraOpts("-libraryPath", keditor.resolve("lib").absolutePath)
 
                 definitionFile.set(
                     project.file("src/iosMain/cinterop/keditor.def")
@@ -35,7 +37,8 @@ fun createKEditor(taget: KotlinNativeTarget) {
 
                 includeDirs(
                     ffmpegDir.resolve("include"),
-                    x264Dir.resolve("include")
+                    x264Dir.resolve("include"),
+                    project.file("../native/keditor/include")
                 )
             }
         }

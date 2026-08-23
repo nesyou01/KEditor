@@ -12,6 +12,10 @@ set(X264_DIR
         ${CMAKE_CURRENT_SOURCE_DIR}/../../../../native/x264/android/${ANDROID_ABI}
 )
 
+set(KEDItOR_DIR
+        ${CMAKE_CURRENT_SOURCE_DIR}/../../../../native/keditor
+)
+
 add_library(
         keditor
         SHARED
@@ -23,6 +27,7 @@ target_include_directories(
         PRIVATE
         ${FFMPEG_DIR}/include
         ${X264_DIR}/include
+        ${KEDItOR_DIR}/include
 )
 
 target_link_libraries(
@@ -39,6 +44,9 @@ target_link_libraries(
 
         # x264
         ${X264_DIR}/lib/libx264.a
+
+        #keditor
+        ${KEDItOR_DIR}/lib/android/${ANDROID_ABI}/lib/libkeditor.a
 
         z
         # Android

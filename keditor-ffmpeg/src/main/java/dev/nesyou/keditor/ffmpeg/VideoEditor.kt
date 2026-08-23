@@ -6,15 +6,20 @@ class VideoEditor {
         System.loadLibrary("keditor")
     }
 
-    private external fun nativeGetFFmpegVersion(): String
+    private external fun testCrop(
+        inputPath: String,
+        outputPath: String
+    ): Int
 
-    private external fun nativeGetFFmpegMajorVersion(): Int
 
     fun ffmpegVersion(): String {
-        return nativeGetFFmpegVersion()
+        return "asdasd"
     }
 
-    fun ffmpegMajorVersion(): Int {
-        return nativeGetFFmpegMajorVersion()
+    fun testCropaa(
+        inputPath: String,
+        outputPath: String
+    ): Int {
+        return testCrop(inputPath, outputPath)
     }
 }
