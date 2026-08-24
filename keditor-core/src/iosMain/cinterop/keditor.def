@@ -1,11 +1,4 @@
-headers =       libavutil/avutil.h \
-                libavcodec/avcodec.h \
-                libavformat/avformat.h \
-                libavfilter/avfilter.h \
-                libswscale/swscale.h \
-                libswresample/swresample.h \
-                x264.h \
-                keditor.h
+headers =        keditor.h
 
 
 linkerOpts =     -liconv \

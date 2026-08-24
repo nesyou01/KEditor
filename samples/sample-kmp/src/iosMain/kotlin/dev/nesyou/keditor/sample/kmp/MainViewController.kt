@@ -9,6 +9,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.uikit.LocalUIViewController
 import androidx.compose.ui.window.ComposeUIViewController
 import dev.nesyou.keditor.VideoEditor
+import io.github.vinceglb.filekit.FileKit
+import io.github.vinceglb.filekit.absolutePath
+import io.github.vinceglb.filekit.cacheDir
+import io.github.vinceglb.filekit.resolve
 import kotlinx.cinterop.ExperimentalForeignApi
 import platform.Foundation.NSFileManager
 import platform.Foundation.NSTemporaryDirectory
@@ -42,7 +46,7 @@ fun MainViewController() = ComposeUIViewController {
             pickVideo(view) { path ->
 
                 if (path != null) {
-                   editor.test(path)
+                   editor.test(path, FileKit.cacheDir.resolve("output.mp4").absolutePath())
                 }
             }
         }
