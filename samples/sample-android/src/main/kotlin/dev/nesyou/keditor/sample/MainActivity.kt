@@ -76,15 +76,19 @@ class MainActivity : ComponentActivity() {
                     "cropped.mp4"
                 )
 
-                val result = videoEditor.testCropaa(
-                    inputFile.absolutePath,
-                    outputFile.absolutePath
-                )
-
-                Log.d(
-                    "VideoEditor",
-                    "Result=$result output=${outputFile.absolutePath}"
-                )
+                try {
+                    val result = videoEditor.testCropaa(
+                        inputFile.absolutePath,
+                        outputFile.absolutePath,
+                        "crop=640:480:0:0"
+                    )
+                    Log.d(
+                        "CropSample",
+                        "Result=$result output=${outputFile.absolutePath}"
+                    )
+                }catch (e: Exception){
+                    println("CropSample $e")
+                }
             }
         }
 

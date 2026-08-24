@@ -6,9 +6,10 @@ class VideoEditor {
         System.loadLibrary("keditor")
     }
 
-    private external fun testCrop(
+    private external fun nativeApplyFilter(
         inputPath: String,
-        outputPath: String
+        outputPath: String,
+        filterDescr: String
     ): Int
 
 
@@ -18,8 +19,9 @@ class VideoEditor {
 
     fun testCropaa(
         inputPath: String,
-        outputPath: String
+        outputPath: String,
+        filterDescr: String
     ): Int {
-        return testCrop(inputPath, outputPath)
+        return nativeApplyFilter(inputPath, outputPath, filterDescr)
     }
 }
