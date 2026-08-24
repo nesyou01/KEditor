@@ -22,5 +22,5 @@ dependencies {
     implementation(libs.compose.foundation)
     implementation(libs.compose.material3)
 
-    implementation(projects.keditorCore)
+    implementation(projects.samples.sampleKmp)
 }
