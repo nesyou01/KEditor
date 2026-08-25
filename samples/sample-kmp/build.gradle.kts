@@ -17,7 +17,8 @@ kotlin {
                 implementation(libs.compose.foundation)
                 implementation(libs.compose.material3)
 
-                implementation(libs.filekit)
+                api(libs.filekit)
+                api(libs.filekit.dialogs)
 
                 implementation(projects.keditorCore)
             }

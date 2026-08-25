@@ -1,6 +1,6 @@
 package dev.nesyou.keditor.ffmpeg
 
-class VideoEditor {
+object AndroidMediaEditor {
 
     init {
         System.loadLibrary("keditor")
@@ -13,15 +13,15 @@ class VideoEditor {
     ): Int
 
 
-    fun ffmpegVersion(): String {
-        return "asdasd"
-    }
-
-    fun testCropaa(
+    fun applyFilter(
         inputPath: String,
         outputPath: String,
         filterDescr: String
-    ): Int {
-        return nativeApplyFilter(inputPath, outputPath, filterDescr)
+    ) {
+        nativeApplyFilter(
+            inputPath = inputPath,
+            outputPath = outputPath,
+            filterDescr = filterDescr
+        )
     }
 }

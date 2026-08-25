@@ -31,7 +31,7 @@ static void logError(const char* message, int ret)
 
 extern "C"
 JNIEXPORT jint JNICALL
-Java_dev_nesyou_keditor_ffmpeg_VideoEditor_nativeApplyFilter(
+Java_dev_nesyou_keditor_ffmpeg_AndroidMediaEditor_nativeApplyFilter(
         JNIEnv* env,
         jobject /* thiz */,
         jstring inputPath,

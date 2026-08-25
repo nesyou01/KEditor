@@ -8,28 +8,40 @@ import dev.nesyou.keditor.filters.Filter
 //
 
 class KEditor private constructor(
+    private val trimConfig: TrimConfig,
+    private val filters: Collection<Filter>,
 ) {
 
     class Builder {
         private var trimConfig: TrimConfig = TrimConfig.UNSET
         private var filters: Collection<Filter> = emptyList()
 
-        fun setTrimConfig(trimConfig: TrimConfig) {
+        fun setTrimConfig(trimConfig: TrimConfig): Builder = apply {
             this.trimConfig = trimConfig
         }
 
-        fun setFilters(vararg filters: Filter) {
+        fun setFilters(vararg filters: Filter): Builder = apply {
             this.filters = filters.asList()
         }
 
         fun build(): KEditor =
-            KEditor()
+            KEditor(
+                trimConfig = trimConfig,
+                filters = filters
+            )
 
     }
 
 
     fun start(input: String, output: String) {
-
+        PlatformKEditor.applyFilter(
+            input = input,
+            output = output,
+            filters = buildFilters()
+        )
     }
 
+
+    private fun buildFilters() =
+        this.filters.joinToString(transform = Filter::build, separator = ",")
 }

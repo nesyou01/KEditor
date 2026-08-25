@@ -7,8 +7,8 @@ import kotlin.math.roundToInt
 //
 
 class CropFilter(
-    private val startX: Double,
-    private val startY: Double,
+    private val startX: Double = 0.0,
+    private val startY: Double = 0.0,
     private val width: Int,
     private val height: Int
 ) : Filter {
@@ -26,6 +26,6 @@ class CropFilter(
     )
 
     override fun build(): String =
-        "crop=$width:$height:$startX:$startY"
+        "crop=$width:$height:${startX.roundToInt()}:${startY.roundToInt()}"
 
 }

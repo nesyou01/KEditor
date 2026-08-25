@@ -6,9 +6,10 @@ android-minSdk = "24"
 kotlin = "2.4.10"
 vanniktech-maven-publish = "0.37.0"
 androidx-activity = "1.13.0"
-composeMultiplatform = "1.11.1"
+composeMultiplatform = "1.12.0"
 material3 = "1.11.0-alpha07"
 jetbrainsKotlinJvm = "2.4.10"
+filekit = "0.15.0"
 
 [libraries]
 androidx-activity-compose = { module = "androidx.activity:activity-compose", version.ref = "androidx-activity" }
@@ -17,7 +18,8 @@ compose-foundation = { module = "org.jetbrains.compose.foundation:foundation", v
 compose-material3 = { module = "org.jetbrains.compose.material3:material3", version.ref = "material3" }
 compose-ui = { module = "org.jetbrains.compose.ui:ui", version.ref = "composeMultiplatform" }
 
-filekit = "io.github.vinceglb:filekit-core:0.15.0"
+filekit = { module = "io.github.vinceglb:filekit-core", version.ref = "filekit" }
+filekit-dialogs = { module = "io.github.vinceglb:filekit-dialogs", version.ref = "filekit" }
 
 multiplatform-gradlePlugin = { module = "com.android.kotlin.multiplatform.library:com.android.kotlin.multiplatform.library.gradle.plugin", version.ref = "agp" }
 kotlin-gradlePlugin = { module = "org.jetbrains.kotlin:kotlin-gradle-plugin", version.ref = "kotlin" }
