@@ -334,29 +334,89 @@ static int encode_and_write(AppContext *app, AVFrame *frame)
     if (!pkt)
         return AVERROR(ENOMEM);
 
-    /* avcodec_send_frame() can return EAGAIN to mean "my internal
-     * buffer is full -- drain packets with receive_packet() first,
-     * then retry the same send_frame() call". Loop until it actually
-     * succeeds or fails for a real reason. */
-    int send_ret;
-    while (1) {
-        send_ret = avcodec_send_frame(app->enc_ctx, frame);
-        if (send_ret != AVERROR(EAGAIN))
-            break;
+    int ret;
 
-        int drain_ret = drain_encoder(app, pkt);
-        if (drain_ret < 0) {
-            av_packet_free(&pkt);
-            return drain_ret;
+    ret = avcodec_send_frame(app->enc_ctx, frame);
+
+    if (ret == AVERROR(EAGAIN)) {
+        while (1) {
+            ret = avcodec_receive_packet(app->enc_ctx, pkt);
+
+            if (ret == AVERROR(EAGAIN)) {
+                av_packet_free(&pkt);
+                return AVERROR(EAGAIN);
+            }
+
+            if (ret == AVERROR_EOF) {
+                av_packet_free(&pkt);
+                return 0;
+            }
+
+            if (ret < 0) {
+                av_packet_free(&pkt);
+                return ret;
+            }
+
+            pkt->stream_index = app->out_video_stream_idx;
+
+            av_packet_rescale_ts(
+                    pkt,
+                    app->enc_ctx->time_base,
+                    app->out_fmt_ctx
+                            ->streams[app->out_video_stream_idx]
+                            ->time_base
+            );
+
+            ret = av_interleaved_write_frame(
+                    app->out_fmt_ctx,
+                    pkt
+            );
+
+            av_packet_unref(pkt);
+
+            if (ret < 0) {
+                av_packet_free(&pkt);
+                return ret;
+            }
         }
     }
 
-    if (send_ret < 0 && send_ret != AVERROR_EOF) {
+    if (ret < 0 && ret != AVERROR_EOF) {
         av_packet_free(&pkt);
-        return send_ret;
+        return ret;
     }
 
-    int ret = drain_encoder(app, pkt);
+    while (1) {
+        ret = avcodec_receive_packet(app->enc_ctx, pkt);
+
+        if (ret == AVERROR(EAGAIN) || ret == AVERROR_EOF) {
+            ret = 0;
+            break;
+        }
+
+        if (ret < 0)
+            break;
+
+        pkt->stream_index = app->out_video_stream_idx;
+
+        av_packet_rescale_ts(
+                pkt,
+                app->enc_ctx->time_base,
+                app->out_fmt_ctx
+                        ->streams[app->out_video_stream_idx]
+                        ->time_base
+        );
+
+        ret = av_interleaved_write_frame(
+                app->out_fmt_ctx,
+                pkt
+        );
+
+        av_packet_unref(pkt);
+
+        if (ret < 0)
+            break;
+    }
 
     av_packet_free(&pkt);
     return ret;
