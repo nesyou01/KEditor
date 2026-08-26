@@ -28,6 +28,7 @@ import kotlinx.coroutines.launch
 // Created by Youness Lagmah on 8/24/26.
 //
 
+var nmb = 0
 @Composable
 fun SharedSample() {
     val scope = rememberCoroutineScope()
@@ -44,14 +45,15 @@ fun SharedSample() {
             Button(
                 onClick = {
                     scope.launch {
+                        nmb++
                         val imageFile = FileKit.openFilePicker(type = FileKitType.Video)
                             ?: return@launch
 
-                        val inputFile = FileKit.filesDir.resolve("input.mp4")
+                        val inputFile = FileKit.filesDir.resolve("input${nmb}.mp4")
 
                         inputFile.write(imageFile.readBytes())
 
-                        val output = FileKit.cacheDir.resolve("output.mp4")
+                        val output = FileKit.cacheDir.resolve("output${nmb}.mp4")
 
                         val keditor = KEditor
                             .Builder()
