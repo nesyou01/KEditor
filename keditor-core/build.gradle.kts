@@ -26,6 +26,12 @@ kotlin {
                 api(projects.keditorFfmpeg)
             }
         }
+
+        commonMain {
+            dependencies {
+                api(libs.coroutines.core)
+            }
+        }
     }
 }
 

@@ -51,22 +51,27 @@ fun SharedSample() {
 
                         inputFile.write(imageFile.readBytes())
 
-
                         val output = FileKit.cacheDir.resolve("output.mp4")
 
                         val keditor = KEditor
                             .Builder()
                             .setFilters(
                                 CropFilter(
-                                    width = 640,
-                                    height = 480,
+                                    width = 200,
+                                    height = 200,
                                     startX = 0.0,
                                     startY = 0.0
                                 )
                             )
                             .build()
 
-                        keditor.start(inputFile.absolutePath(), output.absolutePath())
+                        keditor.start(
+                            input = inputFile.absolutePath(),
+                            output = output.absolutePath(),
+                            progress = {
+                                println("UNESS PROGRESS $it")
+                            }
+                        )
 
                         println("UNESS DONE ${output.absolutePath()}")
                     }

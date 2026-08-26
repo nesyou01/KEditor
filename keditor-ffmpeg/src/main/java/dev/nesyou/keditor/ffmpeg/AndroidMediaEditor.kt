@@ -9,19 +9,22 @@ object AndroidMediaEditor {
     private external fun nativeApplyFilter(
         inputPath: String,
         outputPath: String,
-        filterDescr: String
+        filterDescr: String,
+        progress: (Float) -> Unit
     ): Int
 
 
     fun applyFilter(
         inputPath: String,
         outputPath: String,
-        filterDescr: String
+        filterDescr: String,
+        progress: (Float) -> Unit
     ) {
         nativeApplyFilter(
             inputPath = inputPath,
             outputPath = outputPath,
-            filterDescr = filterDescr
+            filterDescr = filterDescr,
+            progress = progress
         )
     }
 }

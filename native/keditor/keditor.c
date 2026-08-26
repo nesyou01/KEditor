@@ -1,18 +1,33 @@
 #include "include/keditor.h"
 
 
-static void app_context_init(AppContext *app)
-{
+static void app_context_init(AppContext *app) {
     memset(app, 0, sizeof(*app));
     app->video_stream_idx = -1;
     app->out_video_stream_idx = -1;
 }
 
+static void report_progress(const AppContext *app, const AVPacket *pkt) {
+    if (!app->progress_cb || !app->in_fmt_ctx || app->in_fmt_ctx->duration <= 0)
+        return;
+
+    if (pkt->pts == AV_NOPTS_VALUE)
+        return;
+
+    const AVStream *stream = app->in_fmt_ctx->streams[pkt->stream_index];
+    const int64_t pts_us = av_rescale_q(pkt->pts, stream->time_base, AV_TIME_BASE_Q);
+
+    float fraction = (float) pts_us / (float) app->in_fmt_ctx->duration;
+    if (fraction < 0.0) fraction = 0.0f;
+    if (fraction > 1.0) fraction = 1.0f;
+
+    app->progress_cb(app->progress_user_data, fraction);
+}
+
 /* Single teardown path used regardless of how far setup got. Every
  * pointer is checked before freeing, so it's safe to call this after a
  * partial/failed initialization. */
-static void app_context_cleanup(AppContext *app)
-{
+static void app_context_cleanup(AppContext *app) {
     if (app->filter_graph)
         avfilter_graph_free(&app->filter_graph);
     if (app->dec_ctx)
@@ -30,8 +45,7 @@ static void app_context_cleanup(AppContext *app)
 }
 
 /* Open the input file, find the video stream, open its decoder. */
-static int open_input(AppContext *app, const char *filename)
-{
+static int open_input(AppContext *app, const char *filename) {
     int ret = avformat_open_input(&app->in_fmt_ctx, filename, NULL, NULL);
     if (ret < 0) {
         fprintf(stderr, "Cannot open input file '%s'\n", filename);
@@ -80,8 +94,7 @@ static int open_input(AppContext *app, const char *filename)
 /* Pick the encoder we'll use for output. Done up front (before the
  * filter graph is built) so init_filters() can constrain the graph's
  * output pixel format to whatever this encoder actually supports. */
-static int choose_encoder(AppContext *app)
-{
+static int choose_encoder(AppContext *app) {
     if (!app->encoder)
         app->encoder = avcodec_find_encoder_by_name("libx264");
     if (!app->encoder) {
@@ -102,8 +115,7 @@ static int choose_encoder(AppContext *app)
  * (e.g. an encoder like rawvideo that accepts anything), the filter
  * chain is left unmodified. */
 static int build_filter_chain(AppContext *app, const char *filter_descr,
-                               char *out, size_t out_size)
-{
+                              char *out, size_t out_size) {
     const enum AVPixelFormat *pix_fmts = NULL;
     int nb_pix_fmts = 0;
     char fmt_list[256];
@@ -111,12 +123,12 @@ static int build_filter_chain(AppContext *app, const char *filter_descr,
     int ret;
 
     ret = avcodec_get_supported_config(NULL, app->encoder, AV_CODEC_CONFIG_PIX_FORMAT, 0,
-                                        (const void **)&pix_fmts, &nb_pix_fmts);
+                                       (const void **) &pix_fmts, &nb_pix_fmts);
     if (ret < 0)
         return ret;
 
     if (!pix_fmts || nb_pix_fmts <= 0) {
-        if (snprintf(out, out_size, "%s", filter_descr) >= (int)out_size)
+        if (snprintf(out, out_size, "%s", filter_descr) >= (int) out_size)
             return AVERROR(ENOSPC);
         return 0;
     }
@@ -130,38 +142,37 @@ static int build_filter_chain(AppContext *app, const char *filter_descr,
             continue;
 
         written = snprintf(fmt_list + used, sizeof(fmt_list) - used,
-                            "%s%s", used ? "|" : "", name);
-        if (written < 0 || used + (size_t)written >= sizeof(fmt_list))
+                           "%s%s", used ? "|" : "", name);
+        if (written < 0 || used + (size_t) written >= sizeof(fmt_list))
             break; /* stop rather than overflow; formats found so far are enough */
-        used += (size_t)written;
+        used += (size_t) written;
     }
 
     if (used == 0) {
-        if (snprintf(out, out_size, "%s", filter_descr) >= (int)out_size)
+        if (snprintf(out, out_size, "%s", filter_descr) >= (int) out_size)
             return AVERROR(ENOSPC);
         return 0;
     }
 
-    if (snprintf(out, out_size, "%s,format=%s", filter_descr, fmt_list) >= (int)out_size)
+    if (snprintf(out, out_size, "%s,format=%s", filter_descr, fmt_list) >= (int) out_size)
         return AVERROR(ENOSPC);
 
     return 0;
 }
 
 /* Build a simple filter graph: buffer -> <filter_descr> -> buffersink */
-static int init_filters(AppContext *app, const char *filter_descr)
-{
+static int init_filters(AppContext *app, const char *filter_descr) {
     char args[512];
     char full_filter_descr[768];
     int ret;
     AVFilterInOut *outputs = NULL;
-    AVFilterInOut *inputs  = NULL;
-    const AVFilter *buffersrc  = avfilter_get_by_name("buffer");
+    AVFilterInOut *inputs = NULL;
+    const AVFilter *buffersrc = avfilter_get_by_name("buffer");
     const AVFilter *buffersink = avfilter_get_by_name("buffersink");
     AVRational time_base = app->in_fmt_ctx->streams[app->video_stream_idx]->time_base;
 
     outputs = avfilter_inout_alloc();
-    inputs  = avfilter_inout_alloc();
+    inputs = avfilter_inout_alloc();
     app->filter_graph = avfilter_graph_alloc();
 
     if (!outputs || !inputs || !app->filter_graph) {
@@ -178,7 +189,7 @@ static int init_filters(AppContext *app, const char *filter_descr)
              app->dec_ctx->sample_aspect_ratio.den ? app->dec_ctx->sample_aspect_ratio.den : 1);
 
     ret = avfilter_graph_create_filter(&app->buffersrc_ctx, buffersrc, "in",
-                                        args, NULL, app->filter_graph);
+                                       args, NULL, app->filter_graph);
     if (ret < 0) {
         fprintf(stderr, "Cannot create buffer source\n");
         avfilter_inout_free(&inputs);
@@ -187,7 +198,7 @@ static int init_filters(AppContext *app, const char *filter_descr)
     }
 
     ret = avfilter_graph_create_filter(&app->buffersink_ctx, buffersink, "out",
-                                        NULL, NULL, app->filter_graph);
+                                       NULL, NULL, app->filter_graph);
     if (ret < 0) {
         fprintf(stderr, "Cannot create buffer sink\n");
         avfilter_inout_free(&inputs);
@@ -206,15 +217,15 @@ static int init_filters(AppContext *app, const char *filter_descr)
         return ret;
     }
 
-    outputs->name       = av_strdup("in");
+    outputs->name = av_strdup("in");
     outputs->filter_ctx = app->buffersrc_ctx;
-    outputs->pad_idx    = 0;
-    outputs->next       = NULL;
+    outputs->pad_idx = 0;
+    outputs->next = NULL;
 
-    inputs->name       = av_strdup("out");
+    inputs->name = av_strdup("out");
     inputs->filter_ctx = app->buffersink_ctx;
-    inputs->pad_idx    = 0;
-    inputs->next       = NULL;
+    inputs->pad_idx = 0;
+    inputs->next = NULL;
 
     if (!outputs->name || !inputs->name) {
         avfilter_inout_free(&inputs);
@@ -223,7 +234,7 @@ static int init_filters(AppContext *app, const char *filter_descr)
     }
 
     ret = avfilter_graph_parse_ptr(app->filter_graph, full_filter_descr,
-                                    &inputs, &outputs, NULL);
+                                   &inputs, &outputs, NULL);
     avfilter_inout_free(&inputs);
     avfilter_inout_free(&outputs);
     if (ret < 0)
@@ -237,8 +248,7 @@ static int init_filters(AppContext *app, const char *filter_descr)
 }
 
 /* Open the output file and set up an encoder matching the filtered frames. */
-static int open_output(AppContext *app, const char *filename)
-{
+static int open_output(AppContext *app, const char *filename) {
     int ret;
     /* app->encoder was already chosen by choose_encoder() before the
      * filter graph was built -- reuse it rather than searching again,
@@ -261,14 +271,14 @@ static int open_output(AppContext *app, const char *filename)
     if (!app->enc_ctx)
         return AVERROR(ENOMEM);
 
-    app->enc_ctx->height    = av_buffersink_get_h(app->buffersink_ctx);
-    app->enc_ctx->width     = av_buffersink_get_w(app->buffersink_ctx);
+    app->enc_ctx->height = av_buffersink_get_h(app->buffersink_ctx);
+    app->enc_ctx->width = av_buffersink_get_w(app->buffersink_ctx);
     app->enc_ctx->sample_aspect_ratio = av_buffersink_get_sample_aspect_ratio(app->buffersink_ctx);
-    app->enc_ctx->pix_fmt   = av_buffersink_get_format(app->buffersink_ctx);
+    app->enc_ctx->pix_fmt = av_buffersink_get_format(app->buffersink_ctx);
     app->enc_ctx->time_base = av_buffersink_get_time_base(app->buffersink_ctx);
     app->enc_ctx->framerate = av_buffersink_get_frame_rate(app->buffersink_ctx);
-    app->enc_ctx->bit_rate  = 2 * 1000 * 1000; /* 2 Mbps, adjust to taste */
-    app->enc_ctx->gop_size  = 12;
+    app->enc_ctx->bit_rate = 2 * 1000 * 1000; /* 2 Mbps, adjust to taste */
+    app->enc_ctx->gop_size = 12;
 
     if (app->out_fmt_ctx->oformat->flags & AVFMT_GLOBALHEADER)
         app->enc_ctx->flags |= AV_CODEC_FLAG_GLOBAL_HEADER;
@@ -304,8 +314,7 @@ static int open_output(AppContext *app, const char *filename)
 /* Drain every packet currently buffered in the encoder and write it out.
  * Returns 0 on success (including the "nothing available yet" case),
  * or a negative error on real failure. */
-static int drain_encoder(AppContext *app, AVPacket *pkt)
-{
+static int drain_encoder(AppContext *app, AVPacket *pkt) {
     int ret = 0;
 
     while (ret >= 0) {
@@ -319,7 +328,7 @@ static int drain_encoder(AppContext *app, AVPacket *pkt)
 
         pkt->stream_index = app->out_video_stream_idx;
         av_packet_rescale_ts(pkt, app->enc_ctx->time_base,
-                              app->out_fmt_ctx->streams[app->out_video_stream_idx]->time_base);
+                             app->out_fmt_ctx->streams[app->out_video_stream_idx]->time_base);
         ret = av_interleaved_write_frame(app->out_fmt_ctx, pkt);
         av_packet_unref(pkt);
     }
@@ -327,8 +336,7 @@ static int drain_encoder(AppContext *app, AVPacket *pkt)
     return ret;
 }
 
-static int encode_and_write(AppContext *app, AVFrame *frame)
-{
+static int encode_and_write(AppContext *app, AVFrame *frame) {
     AVPacket *pkt = av_packet_alloc();
     if (!pkt)
         return AVERROR(ENOMEM);
@@ -359,16 +367,16 @@ static int encode_and_write(AppContext *app, AVFrame *frame)
             pkt->stream_index = app->out_video_stream_idx;
 
             av_packet_rescale_ts(
-                    pkt,
-                    app->enc_ctx->time_base,
-                    app->out_fmt_ctx
-                            ->streams[app->out_video_stream_idx]
-                            ->time_base
+                pkt,
+                app->enc_ctx->time_base,
+                app->out_fmt_ctx
+                ->streams[app->out_video_stream_idx]
+                ->time_base
             );
 
             ret = av_interleaved_write_frame(
-                    app->out_fmt_ctx,
-                    pkt
+                app->out_fmt_ctx,
+                pkt
             );
 
             av_packet_unref(pkt);
@@ -399,16 +407,16 @@ static int encode_and_write(AppContext *app, AVFrame *frame)
         pkt->stream_index = app->out_video_stream_idx;
 
         av_packet_rescale_ts(
-                pkt,
-                app->enc_ctx->time_base,
-                app->out_fmt_ctx
-                        ->streams[app->out_video_stream_idx]
-                        ->time_base
+            pkt,
+            app->enc_ctx->time_base,
+            app->out_fmt_ctx
+            ->streams[app->out_video_stream_idx]
+            ->time_base
         );
 
         ret = av_interleaved_write_frame(
-                app->out_fmt_ctx,
-                pkt
+            app->out_fmt_ctx,
+            pkt
         );
 
         av_packet_unref(pkt);
@@ -424,8 +432,7 @@ static int encode_and_write(AppContext *app, AVFrame *frame)
 /* Push a decoded frame through the filter graph, then encode every
  * filtered frame that comes out the other side. Pass frame == NULL to
  * flush the filter graph at end of stream. */
-static int filter_encode_frame(AppContext *app, AVFrame *frame)
-{
+static int filter_encode_frame(AppContext *app, AVFrame *frame) {
     int ret;
     AVFrame *filt_frame = av_frame_alloc();
     if (!filt_frame)
@@ -457,8 +464,7 @@ static int filter_encode_frame(AppContext *app, AVFrame *frame)
 
 /* Decode every packet belonging to the video stream. Pass pkt == NULL to
  * flush the decoder at end of stream. */
-static int decode_packet(AppContext *app, AVPacket *pkt, AVFrame *frame)
-{
+static int decode_packet(AppContext *app, AVPacket *pkt, AVFrame *frame) {
     int ret = avcodec_send_packet(app->dec_ctx, pkt);
     if (ret < 0)
         return ret;
@@ -483,8 +489,7 @@ static int decode_packet(AppContext *app, AVPacket *pkt, AVFrame *frame)
 }
 
 static int run(AppContext *app, const char *in_filename,
-                const char *out_filename, const char *filter_descr)
-{
+               const char *out_filename, const char *filter_descr) {
     int ret = open_input(app, in_filename);
     if (ret < 0)
         return ret;
@@ -515,6 +520,8 @@ static int run(AppContext *app, const char *in_filename,
         if (ret < 0)
             break;
 
+        report_progress(app, pkt);
+
         if (pkt->stream_index == app->video_stream_idx) {
             ret = decode_packet(app, pkt, frame);
 
@@ -529,13 +536,13 @@ static int run(AppContext *app, const char *in_filename,
     }
 
     if (ret >= 0 || ret == AVERROR_EOF)
-        ret = decode_packet(app, NULL, frame);          /* flush decoder */
+        ret = decode_packet(app, NULL, frame); /* flush decoder */
 
     if (ret >= 0)
-        ret = filter_encode_frame(app, NULL);           /* flush filter graph */
+        ret = filter_encode_frame(app, NULL); /* flush filter graph */
 
     if (ret >= 0)
-        ret = encode_and_write(app, NULL);               /* flush encoder */
+        ret = encode_and_write(app, NULL); /* flush encoder */
 
     if (ret >= 0 || ret == AVERROR_EOF)
         av_write_trailer(app->out_fmt_ctx);
@@ -557,11 +564,17 @@ static int run(AppContext *app, const char *in_filename,
  * Returns 0 on success, or a negative AVERROR code on failure. On
  * failure the caller can format the error with av_strerror().
  */
-int apply_video_filter(const char *in_filename, const char *out_filename,
-                        const char *filter_descr)
-{
+int apply_video_filter(
+    void *env,
+    const char *in_filename,
+    const char *out_filename,
+    const char *filter_descr,
+    const ProgressCallback progress_callback) {
     AppContext app;
     app_context_init(&app);
+
+    app.progress_cb = progress_callback;
+    app.progress_user_data = env;
 
     const int ret = run(&app, in_filename, out_filename, filter_descr);
 

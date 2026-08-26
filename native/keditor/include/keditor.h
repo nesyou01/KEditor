@@ -15,19 +15,30 @@
 #include <libavutil/opt.h>
 #include <libavutil/pixdesc.h>
 
+typedef void (*ProgressCallback)(void *env, float progress);
+
 typedef struct AppContext {
     AVFormatContext *in_fmt_ctx;
     AVFormatContext *out_fmt_ctx;
-    AVCodecContext  *dec_ctx;
-    AVCodecContext  *enc_ctx;
+    AVCodecContext *dec_ctx;
+    AVCodecContext *enc_ctx;
     AVFilterContext *buffersrc_ctx;
     AVFilterContext *buffersink_ctx;
-    AVFilterGraph   *filter_graph;
-    const AVCodec   *encoder;
+    AVFilterGraph *filter_graph;
+    const AVCodec *encoder;
     int video_stream_idx;
     int out_video_stream_idx;
+    ProgressCallback progress_cb;
+    void *progress_user_data;
 } AppContext;
 
-int apply_video_filter(const char *in_filename, const char *out_filename, const char *filter_descr);
+
+int apply_video_filter(
+    void *env,
+    const char *in_filename,
+    const char *out_filename,
+    const char *filter_descr,
+    ProgressCallback progress_callback
+);
 
 #endif
