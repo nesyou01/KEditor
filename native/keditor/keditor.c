@@ -82,9 +82,8 @@ static int open_input(AppContext *app, const char *filename)
  * output pixel format to whatever this encoder actually supports. */
 static int choose_encoder(AppContext *app)
 {
-    app->encoder = avcodec_find_encoder(app->dec_ctx->codec_id);
     if (!app->encoder)
-        app->encoder = avcodec_find_encoder(AV_CODEC_ID_H264);
+        app->encoder = avcodec_find_encoder_by_name("libx264");
     if (!app->encoder) {
         fprintf(stderr, "Necessary encoder not found\n");
         return AVERROR_ENCODER_NOT_FOUND;

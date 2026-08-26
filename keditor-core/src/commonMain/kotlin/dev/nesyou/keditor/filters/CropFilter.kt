@@ -26,6 +26,6 @@ class CropFilter(
     )
 
     override fun build(): String =
-        "crop=$width:$height:${startX.roundToInt()}:${startY.roundToInt()}"
+        "crop=$width:$height:${startX}:${startY}"
 
 }

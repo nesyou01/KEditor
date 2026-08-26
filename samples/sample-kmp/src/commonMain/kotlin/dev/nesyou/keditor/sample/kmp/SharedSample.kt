@@ -13,6 +13,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import dev.nesyou.keditor.KEditor
 import dev.nesyou.keditor.filters.CropFilter
+import dev.nesyou.keditor.filters.ScaleFilter
 import io.github.vinceglb.filekit.FileKit
 import io.github.vinceglb.filekit.absolutePath
 import io.github.vinceglb.filekit.cacheDir
@@ -62,6 +63,10 @@ fun SharedSample() {
                                     height = 480,
                                     startX = 0.0,
                                     startY = 0.0
+                                ),
+                                ScaleFilter(
+                                    width = 1000,
+                                    height = 1000
                                 )
                             )
                             .build()
