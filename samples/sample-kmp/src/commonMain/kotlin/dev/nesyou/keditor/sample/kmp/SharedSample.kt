@@ -29,6 +29,7 @@ import kotlinx.coroutines.launch
 //
 
 var nmb = 0
+
 @Composable
 fun SharedSample() {
     val scope = rememberCoroutineScope()
@@ -55,9 +56,8 @@ fun SharedSample() {
 
                         val output = FileKit.cacheDir.resolve("output${nmb}.mp4")
 
-                        val keditor = KEditor
-                            .Builder()
-                            .setFilters(
+                        val keditor = KEditor {
+                            filter(
                                 CropFilter(
                                     width = 200,
                                     height = 200,
@@ -65,9 +65,9 @@ fun SharedSample() {
                                     startY = 0.0
                                 )
                             )
-                            .build()
+                        }
 
-                        keditor.start(
+                        keditor.process(
                             input = inputFile.absolutePath(),
                             output = output.absolutePath(),
                             progress = {

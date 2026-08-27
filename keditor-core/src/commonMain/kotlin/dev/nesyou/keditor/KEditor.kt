@@ -18,27 +18,30 @@ class KEditor private constructor(
     private val coroutineContext: CoroutineContext
 ) {
 
-    class Builder {
+    class Config {
         private var trimConfig: TrimConfig = TrimConfig.UNSET
+        var coroutineContext: CoroutineContext = Dispatchers.IO
 
-        private var filters: Collection<Filter> = emptyList()
-
-        private var coroutineContext: CoroutineContext = Dispatchers.IO
+        private val filters = mutableListOf<Filter>()
 
 
-        fun setTrimConfig(trimConfig: TrimConfig): Builder = apply {
-            this.trimConfig = trimConfig
+        fun trim(config: TrimConfig) {
+            this.trimConfig = config
         }
 
-        fun setFilters(vararg filters: Filter): Builder = apply {
-            this.filters = filters.asList()
+        fun trim() {
+
         }
 
-        fun setCoroutineContext(context: CoroutineContext) = apply {
-            this.coroutineContext = context
+        fun filters(vararg filters: Filter) {
+            this.filters += filters
         }
 
-        fun build(): KEditor =
+        fun filter(filter: Filter) {
+            this.filters += filter
+        }
+
+        internal fun build(): KEditor =
             KEditor(
                 trimConfig = trimConfig,
                 filters = filters,
@@ -46,22 +49,28 @@ class KEditor private constructor(
             )
     }
 
+    companion object {
 
-    suspend fun start(
+        operator fun invoke(
+            block: Config.() -> Unit
+        ): KEditor =
+            Config().apply(block).build()
+    }
+
+    suspend fun process(
         input: String,
         output: String,
         progress: ProgressCallback = {}
-    ) =
-        withContext(coroutineContext) {
-            PlatformKEditor.applyFilter(
-                input = input,
-                output = output,
-                filters = buildFilters(),
-                progress = progress
-            )
-        }
+    ) = withContext(coroutineContext) {
+        PlatformKEditor.applyFilter(
+            input = input,
+            output = output,
+            filters = buildFilters(),
+            progress = progress
+        )
+    }
 
 
     private fun buildFilters() =
-        this.filters.joinToString(transform = Filter::build, separator = ",")
+        filters.joinToString(transform = Filter::build, separator = ",")
 }
