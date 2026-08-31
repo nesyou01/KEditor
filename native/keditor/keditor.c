@@ -7,8 +7,14 @@ static void app_context_init(AppContext *app) {
     app->out_video_stream_idx = -1;
 }
 
+/* Progress is reported as a fraction of the *trimmed* range, not the
+ * whole file: if the caller asked to encode ms 5000..15000 out of a
+ * 60s file, progress should go 0 -> 1 across that 10s window. */
 static void report_progress(const AppContext *app, const AVPacket *pkt) {
-    if (!app->progress_cb || !app->in_fmt_ctx || app->in_fmt_ctx->duration <= 0)
+    if (!app->progress_cb || !app->in_fmt_ctx)
+        return;
+
+    if (pkt->stream_index != app->video_stream_idx)
         return;
 
     if (pkt->pts == AV_NOPTS_VALUE)
@@ -17,9 +23,17 @@ static void report_progress(const AppContext *app, const AVPacket *pkt) {
     const AVStream *stream = app->in_fmt_ctx->streams[pkt->stream_index];
     const int64_t pts_us = av_rescale_q(pkt->pts, stream->time_base, AV_TIME_BASE_Q);
 
-    float fraction = (float) pts_us / (float) app->in_fmt_ctx->duration;
-    if (fraction < 0.0) fraction = 0.0f;
-    if (fraction > 1.0) fraction = 1.0f;
+    const int64_t range_start = app->trim_start_us;
+    const int64_t range_end = app->trim_end_us > 0
+            ? app->trim_end_us
+            : app->in_fmt_ctx->duration;
+
+    if (range_end <= range_start)
+        return;
+
+    float fraction = (float) (pts_us - range_start) / (float) (range_end - range_start);
+    if (fraction < 0.0f) fraction = 0.0f;
+    if (fraction > 1.0f) fraction = 1.0f;
 
     app->progress_cb(app->progress_user_data, fraction);
 }
@@ -311,6 +325,41 @@ static int open_output(AppContext *app, const char *filename) {
     return 0;
 }
 
+/* Whether a decoded frame's presentation time falls inside
+ * [trim_start_us, trim_end_us]. Frames with no timestamp are let
+ * through since we have no basis to judge them, and a zero/negative
+ * bound means "unbounded" on that side. */
+static int frame_in_trim_range(const AppContext *app, const AVFrame *frame) {
+    if (frame->pts == AV_NOPTS_VALUE)
+        return 1;
+
+    const AVStream *stream = app->in_fmt_ctx->streams[app->video_stream_idx];
+    const int64_t pts_us = av_rescale_q(frame->pts, stream->time_base, AV_TIME_BASE_Q);
+
+    if (app->trim_start_us > 0 && pts_us < app->trim_start_us)
+        return 0;
+    if (app->trim_end_us > 0 && pts_us > app->trim_end_us)
+        return 0;
+
+    return 1;
+}
+
+/* Shift a frame's pts back so that the trimmed output's timeline
+ * starts at (approximately) zero instead of at trim_start_us. Without
+ * this the output file would carry the original file's offsets,
+ * which most players handle badly (long black lead-in, bad seeking). */
+static void offset_frame_pts(const AppContext *app, AVFrame *frame) {
+    if (app->trim_start_us <= 0 || frame->pts == AV_NOPTS_VALUE)
+        return;
+
+    const AVStream *stream = app->in_fmt_ctx->streams[app->video_stream_idx];
+    const int64_t start_pts = av_rescale_q(app->trim_start_us, AV_TIME_BASE_Q, stream->time_base);
+
+    frame->pts -= start_pts;
+    if (frame->pts < 0)
+        frame->pts = 0;
+}
+
 /* Drain every packet currently buffered in the encoder and write it out.
  * Returns 0 on success (including the "nothing available yet" case),
  * or a negative error on real failure. */
@@ -463,7 +512,13 @@ static int filter_encode_frame(AppContext *app, AVFrame *frame) {
 }
 
 /* Decode every packet belonging to the video stream. Pass pkt == NULL to
- * flush the decoder at end of stream. */
+ * flush the decoder at end of stream.
+ *
+ * Frames outside [trim_start_us, trim_end_us] are decoded (so the
+ * decoder's reference state stays correct across B/P frames) but
+ * dropped here rather than sent on to the filter graph/encoder. Frames
+ * that do make it through have their pts shifted back by trim_start_us
+ * so the encoded output starts at ~0. */
 static int decode_packet(AppContext *app, AVPacket *pkt, AVFrame *frame) {
     int ret = avcodec_send_packet(app->dec_ctx, pkt);
     if (ret < 0)
@@ -479,6 +534,14 @@ static int decode_packet(AppContext *app, AVPacket *pkt, AVFrame *frame) {
             return ret;
 
         frame->pts = frame->best_effort_timestamp;
+
+        if (!frame_in_trim_range(app, frame)) {
+            av_frame_unref(frame);
+            continue;
+        }
+
+        offset_frame_pts(app, frame);
+
         ret = filter_encode_frame(app, frame);
         av_frame_unref(frame);
         if (ret < 0)
@@ -489,10 +552,23 @@ static int decode_packet(AppContext *app, AVPacket *pkt, AVFrame *frame) {
 }
 
 static int run(AppContext *app, const char *in_filename,
-        const char *out_filename, const char *filter_descr) {
+        const char *out_filename, const char *filter_descr,
+        long start_ms, long end_ms) {
     int ret = open_input(app, in_filename);
     if (ret < 0)
         return ret;
+
+    /* AV_TIME_BASE is microseconds (1,000,000/s), so ms -> AV_TIME_BASE
+     * units is just ms * 1000; av_rescale keeps this overflow-safe. A
+     * non-positive value means "unbounded" on that side. */
+    app->trim_start_us = start_ms > 0 ? av_rescale(start_ms, AV_TIME_BASE, 1000) : 0;
+    app->trim_end_us = end_ms > 0 ? av_rescale(end_ms, AV_TIME_BASE, 1000) : 0;
+
+    if (app->trim_end_us > 0 && app->trim_end_us <= app->trim_start_us) {
+        fprintf(stderr, "Invalid trim range: end (%ld ms) must be greater than start (%ld ms)\n",
+                end_ms, start_ms);
+        return AVERROR(EINVAL);
+    }
 
     ret = choose_encoder(app);
     if (ret < 0)
@@ -505,6 +581,20 @@ static int run(AppContext *app, const char *in_filename,
     ret = open_output(app, out_filename);
     if (ret < 0)
         return ret;
+
+    /* Seek near the trim start so we don't decode the whole file from
+     * the beginning. This only lands on a keyframe at or before
+     * trim_start_us -- decode_packet()/frame_in_trim_range() still do
+     * the exact frame-accurate cut from there. */
+    if (app->trim_start_us > 0) {
+        ret = avformat_seek_file(app->in_fmt_ctx, -1, INT64_MIN,
+                app->trim_start_us, app->trim_start_us, 0);
+        if (ret < 0) {
+            fprintf(stderr, "Cannot seek to trim start\n");
+            return ret;
+        }
+        avcodec_flush_buffers(app->dec_ctx);
+    }
 
     AVPacket *pkt = av_packet_alloc();
     AVFrame *frame = av_frame_alloc();
@@ -523,6 +613,19 @@ static int run(AppContext *app, const char *in_filename,
         report_progress(app, pkt);
 
         if (pkt->stream_index == app->video_stream_idx) {
+            /* Once we've read a packet timestamped past trim_end_us
+             * there's nothing further in the file we still want; stop
+             * reading and fall into the normal flush path below. */
+            if (app->trim_end_us > 0 && pkt->pts != AV_NOPTS_VALUE) {
+                const AVStream *stream = app->in_fmt_ctx->streams[pkt->stream_index];
+                const int64_t pts_us = av_rescale_q(pkt->pts, stream->time_base, AV_TIME_BASE_Q);
+                if (pts_us > app->trim_end_us) {
+                    av_packet_unref(pkt);
+                    ret = AVERROR_EOF;
+                    break;
+                }
+            }
+
             ret = decode_packet(app, pkt, frame);
 
             av_packet_unref(pkt);
@@ -554,12 +657,18 @@ static int run(AppContext *app, const char *in_filename,
 }
 
 /*
- * apply_video_filter - apply an ffmpeg filter graph to a video file.
+ * apply_video_filter - apply an ffmpeg filter graph to a video file,
+ * optionally trimmed to [start, end].
  *
  * @in_filename:    path to the input media file.
  * @out_filename:   path to the file to create/overwrite.
  * @filter_descr:   any valid ffmpeg video filter string, e.g.
  *                  "crop=640:480:100:50", "scale=1280:720", "hflip".
+ * @start:          trim start, in milliseconds. <= 0 means "from the
+ *                  beginning of the file".
+ * @end:            trim end, in milliseconds. <= 0 means "to the end
+ *                  of the file". Must be greater than @start when both
+ *                  are positive.
  *
  * Returns 0 on success, or a negative AVERROR code on failure. On
  * failure the caller can format the error with av_strerror().
@@ -578,7 +687,7 @@ int apply_video_filter(
     app.progress_cb = progress_callback;
     app.progress_user_data = env;
 
-    const int ret = run(&app, in_filename, out_filename, filter_descr);
+    const int ret = run(&app, in_filename, out_filename, filter_descr, start, end);
 
     if (ret < 0) {
         char errbuf[128];

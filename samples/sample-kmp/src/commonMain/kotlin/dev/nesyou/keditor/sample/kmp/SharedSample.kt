@@ -23,7 +23,7 @@ import io.github.vinceglb.filekit.readBytes
 import io.github.vinceglb.filekit.resolve
 import io.github.vinceglb.filekit.write
 import kotlinx.coroutines.launch
-import kotlin.time.Duration.Companion.milliseconds
+import kotlin.time.Duration.Companion.seconds
 
 //
 // Created by Youness Lagmah on 8/24/26.
@@ -58,7 +58,7 @@ fun SharedSample() {
                         val output = FileKit.cacheDir.resolve("output${nmb}.mp4")
 
                         val keditor = KEditor {
-                            trim(10.milliseconds, 20.milliseconds)
+                            trim(0.seconds, 300.seconds)
 
                             filter(
                                 CropFilter(

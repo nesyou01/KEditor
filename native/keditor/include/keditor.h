@@ -30,6 +30,8 @@ typedef struct AppContext {
     int out_video_stream_idx;
     ProgressCallback progress_cb;
     void *progress_user_data;
+    int64_t trim_start_us;
+    int64_t trim_end_us;
 } AppContext;
 
 
