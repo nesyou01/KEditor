@@ -40,8 +40,10 @@ int apply_video_filter(
     const char *in_filename,
     const char *out_filename,
     const char *filter_descr,
-    long       start,
-    long       end,
+    long start,
+    long end,
+    unsigned char removeAudio,
+    unsigned char removeVideo,
     ProgressCallback progress_callback
 );
 

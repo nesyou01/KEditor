@@ -16,18 +16,42 @@ import kotlin.time.Duration
 class KEditor private constructor(
     private val trimConfig: TrimConfig,
     private val filters: Collection<Filter>,
-    private val coroutineContext: CoroutineContext
+    private val coroutineContext: CoroutineContext,
+    private val removeAudio: Boolean,
+    private val removeVideo: Boolean
 ) {
 
     class Config {
         private var trimConfig: TrimConfig = TrimConfig.UNSET
-        var coroutineContext: CoroutineContext = Dispatchers.IO
+
+        private var removeAudio: Boolean = false
+
+        private var removeVideo: Boolean = false
+
+        private var coroutineContext: CoroutineContext = Dispatchers.IO
 
         private val filters = mutableListOf<Filter>()
 
 
         fun trim(config: TrimConfig) {
             this.trimConfig = config
+        }
+
+
+        fun removeAudio() {
+            this.removeAudio = true
+        }
+
+        fun enableAudio() {
+            this.removeAudio = false
+        }
+
+        fun removeVideo() {
+            this.removeVideo = true
+        }
+
+        fun enableVideo() {
+            this.removeVideo = false
         }
 
         fun trim(start: Duration, end: Duration) {
@@ -40,7 +64,10 @@ class KEditor private constructor(
         }
 
         fun trim(end: Duration) {
-            trim(start = Duration.ZERO, end = end)
+            trim(
+                start = Duration.ZERO,
+                end = end
+            )
         }
 
         fun filters(vararg filters: Filter) {
@@ -51,11 +78,17 @@ class KEditor private constructor(
             this.filters += filter
         }
 
+        fun setCoroutineContext(context: CoroutineContext) {
+            this.coroutineContext = context
+        }
+
         internal fun build(): KEditor =
             KEditor(
                 trimConfig = trimConfig,
                 filters = filters,
-                coroutineContext = coroutineContext
+                coroutineContext = coroutineContext,
+                removeAudio = removeAudio,
+                removeVideo = removeVideo
             )
     }
 
@@ -78,7 +111,9 @@ class KEditor private constructor(
             filters = buildFilters(),
             progress = progress,
             start = trimConfig.start.takeIf { it != Duration.ZERO },
-            end = trimConfig.end.takeIf { it != Duration.INFINITE }
+            end = trimConfig.end.takeIf { it != Duration.INFINITE },
+            removeAudio = removeAudio,
+            removeVideo = removeVideo
         )
     }
 

@@ -25,8 +25,8 @@ static void report_progress(const AppContext *app, const AVPacket *pkt) {
 
     const int64_t range_start = app->trim_start_us;
     const int64_t range_end = app->trim_end_us > 0
-            ? app->trim_end_us
-            : app->in_fmt_ctx->duration;
+                                  ? app->trim_end_us
+                                  : app->in_fmt_ctx->duration;
 
     if (range_end <= range_start)
         return;
@@ -129,7 +129,7 @@ static int choose_encoder(AppContext *app) {
  * (e.g. an encoder like rawvideo that accepts anything), the filter
  * chain is left unmodified. */
 static int build_filter_chain(AppContext *app, const char *filter_descr,
-        char *out, size_t out_size) {
+                              char *out, size_t out_size) {
     const enum AVPixelFormat *pix_fmts = NULL;
     int nb_pix_fmts = 0;
     char fmt_list[256];
@@ -137,7 +137,7 @@ static int build_filter_chain(AppContext *app, const char *filter_descr,
     int ret;
 
     ret = avcodec_get_supported_config(NULL, app->encoder, AV_CODEC_CONFIG_PIX_FORMAT, 0,
-            (const void **) &pix_fmts, &nb_pix_fmts);
+                                       (const void **) &pix_fmts, &nb_pix_fmts);
     if (ret < 0)
         return ret;
 
@@ -156,7 +156,7 @@ static int build_filter_chain(AppContext *app, const char *filter_descr,
             continue;
 
         written = snprintf(fmt_list + used, sizeof(fmt_list) - used,
-                "%s%s", used ? "|" : "", name);
+                           "%s%s", used ? "|" : "", name);
         if (written < 0 || used + (size_t) written >= sizeof(fmt_list))
             break; /* stop rather than overflow; formats found so far are enough */
         used += (size_t) written;
@@ -196,14 +196,14 @@ static int init_filters(AppContext *app, const char *filter_descr) {
     }
 
     snprintf(args, sizeof(args),
-            "video_size=%dx%d:pix_fmt=%d:time_base=%d/%d:pixel_aspect=%d/%d",
-            app->dec_ctx->width, app->dec_ctx->height, app->dec_ctx->pix_fmt,
-            time_base.num, time_base.den,
-            app->dec_ctx->sample_aspect_ratio.num,
-            app->dec_ctx->sample_aspect_ratio.den ? app->dec_ctx->sample_aspect_ratio.den : 1);
+             "video_size=%dx%d:pix_fmt=%d:time_base=%d/%d:pixel_aspect=%d/%d",
+             app->dec_ctx->width, app->dec_ctx->height, app->dec_ctx->pix_fmt,
+             time_base.num, time_base.den,
+             app->dec_ctx->sample_aspect_ratio.num,
+             app->dec_ctx->sample_aspect_ratio.den ? app->dec_ctx->sample_aspect_ratio.den : 1);
 
     ret = avfilter_graph_create_filter(&app->buffersrc_ctx, buffersrc, "in",
-            args, NULL, app->filter_graph);
+                                       args, NULL, app->filter_graph);
     if (ret < 0) {
         fprintf(stderr, "Cannot create buffer source\n");
         avfilter_inout_free(&inputs);
@@ -212,7 +212,7 @@ static int init_filters(AppContext *app, const char *filter_descr) {
     }
 
     ret = avfilter_graph_create_filter(&app->buffersink_ctx, buffersink, "out",
-            NULL, NULL, app->filter_graph);
+                                       NULL, NULL, app->filter_graph);
     if (ret < 0) {
         fprintf(stderr, "Cannot create buffer sink\n");
         avfilter_inout_free(&inputs);
@@ -248,7 +248,7 @@ static int init_filters(AppContext *app, const char *filter_descr) {
     }
 
     ret = avfilter_graph_parse_ptr(app->filter_graph, full_filter_descr,
-            &inputs, &outputs, NULL);
+                                   &inputs, &outputs, NULL);
     avfilter_inout_free(&inputs);
     avfilter_inout_free(&outputs);
     if (ret < 0)
@@ -377,7 +377,7 @@ static int drain_encoder(AppContext *app, AVPacket *pkt) {
 
         pkt->stream_index = app->out_video_stream_idx;
         av_packet_rescale_ts(pkt, app->enc_ctx->time_base,
-                app->out_fmt_ctx->streams[app->out_video_stream_idx]->time_base);
+                             app->out_fmt_ctx->streams[app->out_video_stream_idx]->time_base);
         ret = av_interleaved_write_frame(app->out_fmt_ctx, pkt);
         av_packet_unref(pkt);
     }
@@ -416,16 +416,16 @@ static int encode_and_write(AppContext *app, AVFrame *frame) {
             pkt->stream_index = app->out_video_stream_idx;
 
             av_packet_rescale_ts(
-                    pkt,
-                    app->enc_ctx->time_base,
-                    app->out_fmt_ctx
-                            ->streams[app->out_video_stream_idx]
-                            ->time_base
+                pkt,
+                app->enc_ctx->time_base,
+                app->out_fmt_ctx
+                ->streams[app->out_video_stream_idx]
+                ->time_base
             );
 
             ret = av_interleaved_write_frame(
-                    app->out_fmt_ctx,
-                    pkt
+                app->out_fmt_ctx,
+                pkt
             );
 
             av_packet_unref(pkt);
@@ -456,16 +456,16 @@ static int encode_and_write(AppContext *app, AVFrame *frame) {
         pkt->stream_index = app->out_video_stream_idx;
 
         av_packet_rescale_ts(
-                pkt,
-                app->enc_ctx->time_base,
-                app->out_fmt_ctx
-                        ->streams[app->out_video_stream_idx]
-                        ->time_base
+            pkt,
+            app->enc_ctx->time_base,
+            app->out_fmt_ctx
+            ->streams[app->out_video_stream_idx]
+            ->time_base
         );
 
         ret = av_interleaved_write_frame(
-                app->out_fmt_ctx,
-                pkt
+            app->out_fmt_ctx,
+            pkt
         );
 
         av_packet_unref(pkt);
@@ -552,8 +552,8 @@ static int decode_packet(AppContext *app, AVPacket *pkt, AVFrame *frame) {
 }
 
 static int run(AppContext *app, const char *in_filename,
-        const char *out_filename, const char *filter_descr,
-        long start_ms, long end_ms) {
+               const char *out_filename, const char *filter_descr,
+               long start_ms, long end_ms) {
     int ret = open_input(app, in_filename);
     if (ret < 0)
         return ret;
@@ -588,7 +588,7 @@ static int run(AppContext *app, const char *in_filename,
      * the exact frame-accurate cut from there. */
     if (app->trim_start_us > 0) {
         ret = avformat_seek_file(app->in_fmt_ctx, -1, INT64_MIN,
-                app->trim_start_us, app->trim_start_us, 0);
+                                 app->trim_start_us, app->trim_start_us, 0);
         if (ret < 0) {
             fprintf(stderr, "Cannot seek to trim start\n");
             return ret;
@@ -674,13 +674,15 @@ static int run(AppContext *app, const char *in_filename,
  * failure the caller can format the error with av_strerror().
  */
 int apply_video_filter(
-        void *env,
-        const char *in_filename,
-        const char *out_filename,
-        const char *filter_descr,
-        long start,
-        long end,
-        const ProgressCallback progress_callback) {
+    void *env,
+    const char *in_filename,
+    const char *out_filename,
+    const char *filter_descr,
+    long start,
+    long end,
+    unsigned char removeAudio,
+    unsigned char removeVideo,
+    const ProgressCallback progress_callback) {
     AppContext app;
     app_context_init(&app);
 

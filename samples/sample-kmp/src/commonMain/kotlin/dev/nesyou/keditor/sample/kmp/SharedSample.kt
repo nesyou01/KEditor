@@ -58,6 +58,8 @@ fun SharedSample() {
                         val output = FileKit.cacheDir.resolve("output${nmb}.mp4")
 
                         val keditor = KEditor {
+                            removeAudio()
+
                             trim(0.seconds, 300.seconds)
 
                             filter(

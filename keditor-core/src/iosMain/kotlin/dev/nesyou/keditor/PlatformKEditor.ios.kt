@@ -24,6 +24,8 @@ internal actual object PlatformKEditor {
         filters: String,
         start: Duration?,
         end: Duration?,
+        removeAudio: Boolean,
+        removeVideo: Boolean,
         progress: ProgressCallback
     ) {
         memScoped {

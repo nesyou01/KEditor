@@ -12,6 +12,8 @@ internal actual object PlatformKEditor {
         filters: String,
         start: Duration?,
         end: Duration?,
+        removeAudio: Boolean,
+        removeVideo: Boolean,
         progress: ProgressCallback
     ) {
         AndroidMediaEditor.applyFilter(
@@ -20,6 +22,8 @@ internal actual object PlatformKEditor {
             filterDescr = filters,
             startMs = start?.inWholeMilliseconds,
             endMs = end?.inWholeMilliseconds,
+            removeAudio = removeAudio,
+            removeVideo = removeVideo,
             progress = progress::onProgress
         )
     }
