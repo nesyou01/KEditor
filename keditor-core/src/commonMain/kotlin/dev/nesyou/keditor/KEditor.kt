@@ -7,6 +7,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
 import kotlinx.coroutines.withContext
 import kotlin.coroutines.CoroutineContext
+import kotlin.time.Duration
 
 //
 // Created by Youness Lagmah on 8/24/26.
@@ -29,8 +30,17 @@ class KEditor private constructor(
             this.trimConfig = config
         }
 
-        fun trim() {
+        fun trim(start: Duration, end: Duration) {
+            trim(
+                TrimConfig(
+                    start = start,
+                    end = end
+                )
+            )
+        }
 
+        fun trim(end: Duration) {
+            trim(start = Duration.ZERO, end = end)
         }
 
         fun filters(vararg filters: Filter) {
@@ -66,7 +76,9 @@ class KEditor private constructor(
             input = input,
             output = output,
             filters = buildFilters(),
-            progress = progress
+            progress = progress,
+            start = trimConfig.start.takeIf { it != Duration.ZERO },
+            end = trimConfig.end.takeIf { it != Duration.INFINITE }
         )
     }
 

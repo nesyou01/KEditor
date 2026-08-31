@@ -92,6 +92,8 @@ Java_dev_nesyou_keditor_ffmpeg_AndroidMediaEditor_nativeApplyFilter(
         jstring inputPath,
         jstring outputPath,
         jstring filterDescr,
+        jlong   start,
+        jlong   end,
         jobject progress
 ) {
     if (inputPath == nullptr ||
@@ -236,6 +238,8 @@ Java_dev_nesyou_keditor_ffmpeg_AndroidMediaEditor_nativeApplyFilter(
             inputCStr,
             outputCStr,
             filterCStr,
+            start,
+            end,
             progressHandler
     );
 

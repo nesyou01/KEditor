@@ -9,6 +9,7 @@ import kotlinx.cinterop.StableRef
 import kotlinx.cinterop.asStableRef
 import kotlinx.cinterop.memScoped
 import kotlinx.cinterop.staticCFunction
+import kotlin.time.Duration
 
 internal actual object PlatformKEditor {
 
@@ -21,6 +22,8 @@ internal actual object PlatformKEditor {
         input: String,
         output: String,
         filters: String,
+        start: Duration?,
+        end: Duration?,
         progress: ProgressCallback
     ) {
         memScoped {
