@@ -29,7 +29,7 @@ static void report_progress(
         return;
 
     const AVStream *stream =
-        app->in_fmt_ctx->streams[pkt->stream_index];
+            app->in_fmt_ctx->streams[pkt->stream_index];
 
     const int64_t pts_us = av_rescale_q(
         pkt->pts,
@@ -40,16 +40,16 @@ static void report_progress(
     const int64_t range_start = app->trim_start_us;
 
     const int64_t range_end =
-        app->trim_end_us > 0
-            ? app->trim_end_us
-            : app->in_fmt_ctx->duration;
+            app->trim_end_us > 0
+                ? app->trim_end_us
+                : app->in_fmt_ctx->duration;
 
     if (range_end <= range_start)
         return;
 
     float fraction =
-        (float)(pts_us - range_start) /
-        (float)(range_end - range_start);
+            (float) (pts_us - range_start) /
+            (float) (range_end - range_start);
 
     if (fraction < 0.0f)
         fraction = 0.0f;
@@ -83,7 +83,6 @@ static void app_context_cleanup(AppContext *app) {
     if (app->out_fmt_ctx) {
         if (!(app->out_fmt_ctx->oformat->flags & AVFMT_NOFILE) &&
             app->out_fmt_ctx->pb) {
-
             avio_closep(&app->out_fmt_ctx->pb);
         }
 
@@ -163,7 +162,6 @@ static int open_input(
      */
     if (app->video_stream_idx < 0 &&
         app->audio_stream_idx < 0) {
-
         fprintf(
             stderr,
             "Input contains neither video nor audio\n"
@@ -177,7 +175,6 @@ static int open_input(
      * Open video decoder only when video is required.
      */
     if (!app->remove_video) {
-
         if (app->video_stream_idx < 0) {
             fprintf(
                 stderr,
@@ -188,14 +185,14 @@ static int open_input(
         }
 
         AVStream *stream =
-            app->in_fmt_ctx->streams[
-                app->video_stream_idx
-            ];
+                app->in_fmt_ctx->streams[
+                    app->video_stream_idx
+                ];
 
         const AVCodec *decoder =
-            avcodec_find_decoder(
-                stream->codecpar->codec_id
-            );
+                avcodec_find_decoder(
+                    stream->codecpar->codec_id
+                );
 
         if (!decoder) {
             fprintf(
@@ -207,7 +204,7 @@ static int open_input(
         }
 
         app->dec_ctx =
-            avcodec_alloc_context3(decoder);
+                avcodec_alloc_context3(decoder);
 
         if (!app->dec_ctx)
             return AVERROR(ENOMEM);
@@ -221,7 +218,7 @@ static int open_input(
             return ret;
 
         app->dec_ctx->pkt_timebase =
-            stream->time_base;
+                stream->time_base;
 
         ret = avcodec_open2(
             app->dec_ctx,
@@ -247,10 +244,9 @@ static int open_input(
  * Select video encoder.
  */
 static int choose_encoder(AppContext *app) {
-    if (!app->encoder) {
+    if (!app->encoder)
         app->encoder =
-            avcodec_find_encoder_by_name("libx264");
-    }
+                avcodec_find_encoder_by_name("libx264");
 
     if (!app->encoder) {
         fprintf(
@@ -282,14 +278,14 @@ static int build_filter_chain(
     size_t used = 0;
 
     int ret =
-        avcodec_get_supported_config(
-            NULL,
-            app->encoder,
-            AV_CODEC_CONFIG_PIX_FORMAT,
-            0,
-            (const void **)&pix_fmts,
-            &nb_pix_fmts
-        );
+            avcodec_get_supported_config(
+                NULL,
+                app->encoder,
+                AV_CODEC_CONFIG_PIX_FORMAT,
+                0,
+                (const void **) &pix_fmts,
+                &nb_pix_fmts
+            );
 
     if (ret < 0)
         return ret;
@@ -299,14 +295,12 @@ static int build_filter_chain(
      * Encoder accepts any pixel format.
      */
     if (!pix_fmts || nb_pix_fmts <= 0) {
-
         if (snprintf(
-                out,
-                out_size,
-                "%s",
-                filter_descr
-            ) >= (int)out_size) {
-
+            out,
+            out_size,
+            "%s",
+            filter_descr
+        ) >= (int) out_size) {
             return AVERROR(ENOSPC);
         }
 
@@ -318,43 +312,39 @@ static int build_filter_chain(
 
 
     for (int i = 0; i < nb_pix_fmts; i++) {
-
         const char *name =
-            av_get_pix_fmt_name(
-                pix_fmts[i]
-            );
+                av_get_pix_fmt_name(
+                    pix_fmts[i]
+                );
 
         if (!name)
             continue;
 
         int written =
-            snprintf(
-                fmt_list + used,
-                sizeof(fmt_list) - used,
-                "%s%s",
-                used ? "|" : "",
-                name
-            );
+                snprintf(
+                    fmt_list + used,
+                    sizeof(fmt_list) - used,
+                    "%s%s",
+                    used ? "|" : "",
+                    name
+                );
 
         if (written < 0 ||
-            used + (size_t)written >= sizeof(fmt_list)) {
-
+            used + (size_t) written >= sizeof(fmt_list)) {
             break;
         }
 
-        used += (size_t)written;
+        used += (size_t) written;
     }
 
 
     if (used == 0) {
-
         if (snprintf(
-                out,
-                out_size,
-                "%s",
-                filter_descr
-            ) >= (int)out_size) {
-
+            out,
+            out_size,
+            "%s",
+            filter_descr
+        ) >= (int) out_size) {
             return AVERROR(ENOSPC);
         }
 
@@ -363,13 +353,12 @@ static int build_filter_chain(
 
 
     if (snprintf(
-            out,
-            out_size,
-            "%s,format=%s",
-            filter_descr,
-            fmt_list
-        ) >= (int)out_size) {
-
+        out,
+        out_size,
+        "%s,format=%s",
+        filter_descr,
+        fmt_list
+    ) >= (int) out_size) {
         return AVERROR(ENOSPC);
     }
 
@@ -393,13 +382,13 @@ static int init_filters(
     AVFilterInOut *inputs = NULL;
 
     const AVFilter *buffersrc =
-        avfilter_get_by_name("buffer");
+            avfilter_get_by_name("buffer");
 
     const AVFilter *buffersink =
-        avfilter_get_by_name("buffersink");
+            avfilter_get_by_name("buffersink");
 
     AVRational time_base =
-        app->in_fmt_ctx
+            app->in_fmt_ctx
             ->streams[app->video_stream_idx]
             ->time_base;
 
@@ -408,13 +397,12 @@ static int init_filters(
     inputs = avfilter_inout_alloc();
 
     app->filter_graph =
-        avfilter_graph_alloc();
+            avfilter_graph_alloc();
 
 
     if (!outputs ||
         !inputs ||
         !app->filter_graph) {
-
         avfilter_inout_free(&inputs);
         avfilter_inout_free(&outputs);
 
@@ -440,8 +428,8 @@ static int init_filters(
         app->dec_ctx->sample_aspect_ratio.num,
 
         app->dec_ctx->sample_aspect_ratio.den
-            ? app->dec_ctx->sample_aspect_ratio.den
-            : 1
+        ? app->dec_ctx->sample_aspect_ratio.den
+        : 1
     );
 
 
@@ -510,20 +498,20 @@ static int init_filters(
 
 
     outputs->name =
-        av_strdup("in");
+            av_strdup("in");
 
     outputs->filter_ctx =
-        app->buffersrc_ctx;
+            app->buffersrc_ctx;
 
     outputs->pad_idx = 0;
     outputs->next = NULL;
 
 
     inputs->name =
-        av_strdup("out");
+            av_strdup("out");
 
     inputs->filter_ctx =
-        app->buffersink_ctx;
+            app->buffersink_ctx;
 
     inputs->pad_idx = 0;
     inputs->next = NULL;
@@ -531,7 +519,6 @@ static int init_filters(
 
     if (!outputs->name ||
         !inputs->name) {
-
         avfilter_inout_free(&inputs);
         avfilter_inout_free(&outputs);
 
@@ -600,74 +587,88 @@ static int open_output(
      * VIDEO OUTPUT
      */
     if (!app->remove_video) {
-
         AVStream *out_video =
-            avformat_new_stream(
-                app->out_fmt_ctx,
-                NULL
-            );
+                avformat_new_stream(
+                    app->out_fmt_ctx,
+                    NULL
+                );
 
         if (!out_video)
             return AVERROR(ENOMEM);
 
         app->out_video_stream_idx =
-            out_video->index;
+                out_video->index;
 
 
         const AVCodec *encoder =
-            app->encoder;
+                app->encoder;
 
 
         app->enc_ctx =
-            avcodec_alloc_context3(
-                encoder
-            );
+                avcodec_alloc_context3(
+                    encoder
+                );
 
         if (!app->enc_ctx)
             return AVERROR(ENOMEM);
 
 
         app->enc_ctx->height =
-            av_buffersink_get_h(
-                app->buffersink_ctx
-            );
+                av_buffersink_get_h(
+                    app->buffersink_ctx
+                );
 
         app->enc_ctx->width =
-            av_buffersink_get_w(
-                app->buffersink_ctx
-            );
+                av_buffersink_get_w(
+                    app->buffersink_ctx
+                );
 
         app->enc_ctx->sample_aspect_ratio =
-            av_buffersink_get_sample_aspect_ratio(
-                app->buffersink_ctx
-            );
+                av_buffersink_get_sample_aspect_ratio(
+                    app->buffersink_ctx
+                );
 
         app->enc_ctx->pix_fmt =
-            av_buffersink_get_format(
-                app->buffersink_ctx
-            );
+                av_buffersink_get_format(
+                    app->buffersink_ctx
+                );
 
         app->enc_ctx->time_base =
-            av_buffersink_get_time_base(
-                app->buffersink_ctx
-            );
+                av_buffersink_get_time_base(
+                    app->buffersink_ctx
+                );
 
         app->enc_ctx->framerate =
-            av_buffersink_get_frame_rate(
-                app->buffersink_ctx
+                av_buffersink_get_frame_rate(
+                    app->buffersink_ctx
+                );
+
+        app->enc_ctx->bit_rate = 0;
+
+        if (app->crf >= 0) {
+            char buffer[3];
+            snprintf(buffer, sizeof(buffer), "%d", app->crf);
+
+            av_opt_set(
+                app->enc_ctx->priv_data,
+                "crf",
+                buffer,
+                0
             );
+        }
 
-        app->enc_ctx->bit_rate =
-            2 * 1000 * 1000;
-
-        app->enc_ctx->gop_size = 12;
+        av_opt_set(
+            app->enc_ctx->priv_data,
+            "preset",
+            app->preset,
+            0
+        );
 
 
         if (app->out_fmt_ctx->oformat->flags &
             AVFMT_GLOBALHEADER) {
-
             app->enc_ctx->flags |=
-                AV_CODEC_FLAG_GLOBAL_HEADER;
+                    AV_CODEC_FLAG_GLOBAL_HEADER;
         }
 
 
@@ -697,7 +698,7 @@ static int open_output(
 
 
         out_video->time_base =
-            app->enc_ctx->time_base;
+                app->enc_ctx->time_base;
     }
 
 
@@ -710,24 +711,23 @@ static int open_output(
      */
     if (!app->remove_audio &&
         app->audio_stream_idx >= 0) {
-
         AVStream *in_audio =
-            app->in_fmt_ctx->streams[
-                app->audio_stream_idx
-            ];
+                app->in_fmt_ctx->streams[
+                    app->audio_stream_idx
+                ];
 
         AVStream *out_audio =
-            avformat_new_stream(
-                app->out_fmt_ctx,
-                NULL
-            );
+                avformat_new_stream(
+                    app->out_fmt_ctx,
+                    NULL
+                );
 
         if (!out_audio)
             return AVERROR(ENOMEM);
 
 
         app->out_audio_stream_idx =
-            out_audio->index;
+                out_audio->index;
 
 
         ret = avcodec_parameters_copy(
@@ -745,7 +745,7 @@ static int open_output(
         out_audio->codecpar->codec_tag = 0;
 
         out_audio->time_base =
-            in_audio->time_base;
+                in_audio->time_base;
     }
 
 
@@ -754,7 +754,6 @@ static int open_output(
      */
     if (!(app->out_fmt_ctx->oformat->flags &
           AVFMT_NOFILE)) {
-
         ret = avio_open(
             &app->out_fmt_ctx->pb,
             filename,
@@ -802,28 +801,26 @@ static int frame_in_trim_range(
         return 1;
 
     const AVStream *stream =
-        app->in_fmt_ctx->streams[
-            app->video_stream_idx
-        ];
+            app->in_fmt_ctx->streams[
+                app->video_stream_idx
+            ];
 
     const int64_t pts_us =
-        av_rescale_q(
-            frame->pts,
-            stream->time_base,
-            AV_TIME_BASE_Q
-        );
+            av_rescale_q(
+                frame->pts,
+                stream->time_base,
+                AV_TIME_BASE_Q
+            );
 
 
     if (app->trim_start_us > 0 &&
         pts_us < app->trim_start_us) {
-
         return 0;
     }
 
 
     if (app->trim_end_us > 0 &&
         pts_us > app->trim_end_us) {
-
         return 0;
     }
 
@@ -841,23 +838,22 @@ static void offset_frame_pts(
 ) {
     if (app->trim_start_us <= 0 ||
         frame->pts == AV_NOPTS_VALUE) {
-
         return;
     }
 
 
     const AVStream *stream =
-        app->in_fmt_ctx->streams[
-            app->video_stream_idx
-        ];
+            app->in_fmt_ctx->streams[
+                app->video_stream_idx
+            ];
 
 
     const int64_t start_pts =
-        av_rescale_q(
-            app->trim_start_us,
-            AV_TIME_BASE_Q,
-            stream->time_base
-        );
+            av_rescale_q(
+                app->trim_start_us,
+                AV_TIME_BASE_Q,
+                stream->time_base
+            );
 
 
     frame->pts -= start_pts;
@@ -879,7 +875,6 @@ static int drain_encoder(
 
 
     while (1) {
-
         ret = avcodec_receive_packet(
             app->enc_ctx,
             pkt
@@ -888,7 +883,6 @@ static int drain_encoder(
 
         if (ret == AVERROR(EAGAIN) ||
             ret == AVERROR_EOF) {
-
             return 0;
         }
 
@@ -898,17 +892,17 @@ static int drain_encoder(
 
 
         pkt->stream_index =
-            app->out_video_stream_idx;
+                app->out_video_stream_idx;
 
 
         av_packet_rescale_ts(
             pkt,
             app->enc_ctx->time_base,
             app->out_fmt_ctx
-                ->streams[
-                    app->out_video_stream_idx
-                ]
-                ->time_base
+            ->streams[
+                app->out_video_stream_idx
+            ]
+            ->time_base
         );
 
 
@@ -935,23 +929,22 @@ static int encode_and_write(
     AVFrame *frame
 ) {
     AVPacket *pkt =
-        av_packet_alloc();
+            av_packet_alloc();
 
     if (!pkt)
         return AVERROR(ENOMEM);
 
 
     int ret =
-        avcodec_send_frame(
-            app->enc_ctx,
-            frame
-        );
+            avcodec_send_frame(
+                app->enc_ctx,
+                frame
+            );
 
 
     if (ret < 0 &&
         ret != AVERROR(EAGAIN) &&
         ret != AVERROR_EOF) {
-
         av_packet_free(&pkt);
         return ret;
     }
@@ -979,7 +972,7 @@ static int filter_encode_frame(
     int ret;
 
     AVFrame *filt_frame =
-        av_frame_alloc();
+            av_frame_alloc();
 
     if (!filt_frame)
         return AVERROR(ENOMEM);
@@ -1000,17 +993,15 @@ static int filter_encode_frame(
 
 
     while (1) {
-
         ret =
-            av_buffersink_get_frame(
-                app->buffersink_ctx,
-                filt_frame
-            );
+                av_buffersink_get_frame(
+                    app->buffersink_ctx,
+                    filt_frame
+                );
 
 
         if (ret == AVERROR(EAGAIN) ||
             ret == AVERROR_EOF) {
-
             ret = 0;
             break;
         }
@@ -1021,7 +1012,7 @@ static int filter_encode_frame(
 
 
         filt_frame->pict_type =
-            AV_PICTURE_TYPE_NONE;
+                AV_PICTURE_TYPE_NONE;
 
 
         ret = encode_and_write(
@@ -1055,10 +1046,10 @@ static int decode_packet(
     AVFrame *frame
 ) {
     int ret =
-        avcodec_send_packet(
-            app->dec_ctx,
-            pkt
-        );
+            avcodec_send_packet(
+                app->dec_ctx,
+                pkt
+            );
 
 
     if (ret < 0)
@@ -1066,17 +1057,15 @@ static int decode_packet(
 
 
     while (1) {
-
         ret =
-            avcodec_receive_frame(
-                app->dec_ctx,
-                frame
-            );
+                avcodec_receive_frame(
+                    app->dec_ctx,
+                    frame
+                );
 
 
         if (ret == AVERROR(EAGAIN) ||
             ret == AVERROR_EOF) {
-
             return 0;
         }
 
@@ -1086,14 +1075,13 @@ static int decode_packet(
 
 
         frame->pts =
-            frame->best_effort_timestamp;
+                frame->best_effort_timestamp;
 
 
         if (!frame_in_trim_range(
-                app,
-                frame
-            )) {
-
+            app,
+            frame
+        )) {
             av_frame_unref(frame);
             continue;
         }
@@ -1130,39 +1118,36 @@ static int copy_audio_packet(
     AVPacket *pkt
 ) {
     AVStream *in_stream =
-        app->in_fmt_ctx->streams[
-            app->audio_stream_idx
-        ];
+            app->in_fmt_ctx->streams[
+                app->audio_stream_idx
+            ];
 
     AVStream *out_stream =
-        app->out_fmt_ctx->streams[
-            app->out_audio_stream_idx
-        ];
+            app->out_fmt_ctx->streams[
+                app->out_audio_stream_idx
+            ];
 
 
     /*
      * Check packet timestamp against trim range.
      */
     if (pkt->pts != AV_NOPTS_VALUE) {
-
         const int64_t pts_us =
-            av_rescale_q(
-                pkt->pts,
-                in_stream->time_base,
-                AV_TIME_BASE_Q
-            );
+                av_rescale_q(
+                    pkt->pts,
+                    in_stream->time_base,
+                    AV_TIME_BASE_Q
+                );
 
 
         if (app->trim_start_us > 0 &&
             pts_us < app->trim_start_us) {
-
             return 0;
         }
 
 
         if (app->trim_end_us > 0 &&
             pts_us > app->trim_end_us) {
-
             return AVERROR_EOF;
         }
     }
@@ -1172,13 +1157,12 @@ static int copy_audio_packet(
      * Shift timestamps so the output starts at zero.
      */
     if (app->trim_start_us > 0) {
-
         const int64_t start_pts =
-            av_rescale_q(
-                app->trim_start_us,
-                AV_TIME_BASE_Q,
-                in_stream->time_base
-            );
+                av_rescale_q(
+                    app->trim_start_us,
+                    AV_TIME_BASE_Q,
+                    in_stream->time_base
+                );
 
 
         if (pkt->pts != AV_NOPTS_VALUE)
@@ -1190,7 +1174,7 @@ static int copy_audio_packet(
 
 
     pkt->stream_index =
-        app->out_audio_stream_idx;
+            app->out_audio_stream_idx;
 
 
     av_packet_rescale_ts(
@@ -1216,26 +1200,15 @@ static int run(
     const char *out_filename,
     const char *filter_descr,
     long start_ms,
-    long end_ms,
-    unsigned char remove_audio,
-    unsigned char remove_video
+    long end_ms
 ) {
     int ret;
-
-
-    app->remove_audio =
-        remove_audio != 0;
-
-    app->remove_video =
-        remove_video != 0;
-
 
     /*
      * Can't remove both.
      */
     if (app->remove_audio &&
         app->remove_video) {
-
         fprintf(
             stderr,
             "Cannot remove both audio and video\n"
@@ -1262,7 +1235,6 @@ static int run(
      */
     if (!app->remove_video &&
         app->video_stream_idx < 0) {
-
         fprintf(
             stderr,
             "Video requested but input has no video\n"
@@ -1274,7 +1246,6 @@ static int run(
 
     if (!app->remove_audio &&
         app->audio_stream_idx < 0) {
-
         /*
          * This is not necessarily an error.
          *
@@ -1294,29 +1265,28 @@ static int run(
      * Convert milliseconds to microseconds.
      */
     app->trim_start_us =
-        start_ms > 0
-            ? av_rescale(
-                start_ms,
-                AV_TIME_BASE,
-                1000
-            )
-            : 0;
+            start_ms > 0
+                ? av_rescale(
+                    start_ms,
+                    AV_TIME_BASE,
+                    1000
+                )
+                : 0;
 
 
     app->trim_end_us =
-        end_ms > 0
-            ? av_rescale(
-                end_ms,
-                AV_TIME_BASE,
-                1000
-            )
-            : 0;
+            end_ms > 0
+                ? av_rescale(
+                    end_ms,
+                    AV_TIME_BASE,
+                    1000
+                )
+                : 0;
 
 
     if (app->trim_end_us > 0 &&
         app->trim_end_us <=
-            app->trim_start_us) {
-
+        app->trim_start_us) {
         fprintf(
             stderr,
             "Invalid trim range: "
@@ -1334,7 +1304,6 @@ static int run(
      * Video processing setup.
      */
     if (!app->remove_video) {
-
         ret = choose_encoder(app);
 
         if (ret < 0)
@@ -1371,7 +1340,6 @@ static int run(
      */
     if (!app->remove_video &&
         app->trim_start_us > 0) {
-
         ret = avformat_seek_file(
             app->in_fmt_ctx,
             -1,
@@ -1399,14 +1367,13 @@ static int run(
 
 
     AVPacket *pkt =
-        av_packet_alloc();
+            av_packet_alloc();
 
     AVFrame *frame =
-        av_frame_alloc();
+            av_frame_alloc();
 
 
     if (!pkt || !frame) {
-
         av_packet_free(&pkt);
         av_frame_free(&frame);
 
@@ -1418,12 +1385,11 @@ static int run(
      * Read packets.
      */
     while (1) {
-
         ret =
-            av_read_frame(
-                app->in_fmt_ctx,
-                pkt
-            );
+                av_read_frame(
+                    app->in_fmt_ctx,
+                    pkt
+                );
 
 
         if (ret < 0)
@@ -1441,9 +1407,7 @@ static int run(
          */
         if (pkt->stream_index ==
             app->video_stream_idx) {
-
             if (app->remove_video) {
-
                 av_packet_unref(pkt);
                 continue;
             }
@@ -1454,24 +1418,22 @@ static int run(
              */
             if (app->trim_end_us > 0 &&
                 pkt->pts != AV_NOPTS_VALUE) {
-
                 const AVStream *stream =
-                    app->in_fmt_ctx->streams[
-                        pkt->stream_index
-                    ];
+                        app->in_fmt_ctx->streams[
+                            pkt->stream_index
+                        ];
 
 
                 const int64_t pts_us =
-                    av_rescale_q(
-                        pkt->pts,
-                        stream->time_base,
-                        AV_TIME_BASE_Q
-                    );
+                        av_rescale_q(
+                            pkt->pts,
+                            stream->time_base,
+                            AV_TIME_BASE_Q
+                        );
 
 
                 if (pts_us >
                     app->trim_end_us) {
-
                     av_packet_unref(pkt);
 
                     ret = AVERROR_EOF;
@@ -1504,10 +1466,8 @@ static int run(
          */
         if (pkt->stream_index ==
             app->audio_stream_idx) {
-
             if (app->remove_audio ||
                 app->audio_stream_idx < 0) {
-
                 av_packet_unref(pkt);
                 continue;
             }
@@ -1523,7 +1483,6 @@ static int run(
 
 
             if (ret == AVERROR_EOF) {
-
                 ret = 0;
                 break;
             }
@@ -1550,7 +1509,6 @@ static int run(
     if (!app->remove_video &&
         (ret >= 0 ||
          ret == AVERROR_EOF)) {
-
         ret = decode_packet(
             app,
             NULL,
@@ -1564,7 +1522,6 @@ static int run(
      */
     if (!app->remove_video &&
         ret >= 0) {
-
         ret = filter_encode_frame(
             app,
             NULL
@@ -1577,7 +1534,6 @@ static int run(
      */
     if (!app->remove_video &&
         ret >= 0) {
-
         ret = encode_and_write(
             app,
             NULL
@@ -1590,7 +1546,6 @@ static int run(
      */
     if (ret >= 0 ||
         ret == AVERROR_EOF) {
-
         av_write_trailer(
             app->out_fmt_ctx
         );
@@ -1602,8 +1557,8 @@ static int run(
 
 
     return ret == AVERROR_EOF
-        ? 0
-        : ret;
+               ? 0
+               : ret;
 }
 
 
@@ -1617,8 +1572,10 @@ int apply_video_filter(
     const char *filter_descr,
     long start,
     long end,
-    unsigned char removeAudio,
-    unsigned char removeVideo,
+    unsigned char remove_audio,
+    unsigned char remove_video,
+    int crf,
+    const char *preset,
     const ProgressCallback progress_callback
 ) {
     AppContext app;
@@ -1627,18 +1584,20 @@ int apply_video_filter(
 
     app.progress_cb = progress_callback;
     app.progress_user_data = env;
+    app.remove_audio = remove_audio != 0;
+    app.remove_video = remove_video != 0;
+    app.crf = crf;
+    app.preset = preset;
 
     const int ret =
-        run(
-            &app,
-            in_filename,
-            out_filename,
-            filter_descr,
-            start,
-            end,
-            removeAudio,
-            removeVideo
-        );
+            run(
+                &app,
+                in_filename,
+                out_filename,
+                filter_descr,
+                start,
+                end
+            );
 
 
     if (ret < 0) {

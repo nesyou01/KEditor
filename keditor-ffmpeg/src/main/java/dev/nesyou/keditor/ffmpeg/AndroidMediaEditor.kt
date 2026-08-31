@@ -14,6 +14,8 @@ object AndroidMediaEditor {
         end: Long,
         removeAudio: Boolean,
         removeVideo: Boolean,
+        crf: Int,
+        preset: String,
         progress: (Float) -> Unit
     ): Int
 
@@ -26,6 +28,8 @@ object AndroidMediaEditor {
         endMs: Long?,
         removeAudio: Boolean,
         removeVideo: Boolean,
+        crf: Int?,
+        preset: String,
         progress: (Float) -> Unit
     ) {
         nativeApplyFilter(
@@ -36,7 +40,9 @@ object AndroidMediaEditor {
             start = startMs ?: -1L,
             end = endMs ?: -1L,
             removeAudio = removeAudio,
-            removeVideo = removeVideo
+            removeVideo = removeVideo,
+            crf = crf ?: -1,
+            preset = preset
         )
     }
 }

@@ -1,12 +1,14 @@
 package dev.nesyou.keditor
 
 import dev.nesyou.keditor.callbacks.ProgressCallback
+import dev.nesyou.keditor.configs.Speed
 import dev.nesyou.keditor.configs.TrimConfig
 import dev.nesyou.keditor.filters.Filter
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
 import kotlinx.coroutines.withContext
 import kotlin.coroutines.CoroutineContext
+import kotlin.math.roundToInt
 import kotlin.time.Duration
 
 //
@@ -18,7 +20,9 @@ class KEditor private constructor(
     private val filters: Collection<Filter>,
     private val coroutineContext: CoroutineContext,
     private val removeAudio: Boolean,
-    private val removeVideo: Boolean
+    private val removeVideo: Boolean,
+    private val crf: Int?,
+    private val preset: String
 ) {
 
     class Config {
@@ -27,6 +31,10 @@ class KEditor private constructor(
         private var removeAudio: Boolean = false
 
         private var removeVideo: Boolean = false
+
+        private var speed: Speed = Speed.Medium
+
+        private var crf: Int? = null
 
         private var coroutineContext: CoroutineContext = Dispatchers.IO
 
@@ -78,6 +86,20 @@ class KEditor private constructor(
             this.filters += filter
         }
 
+        fun speed(speed: Speed) {
+            this.speed = speed
+        }
+
+        fun compress(
+            quality: Int = 50,
+        ) {
+            require(quality in 0..100) { "Quality value must be between 0 and 100" }
+
+            val fraction = 1F - (quality / 100F)
+
+            this.crf = (51 * fraction).roundToInt()
+        }
+
         fun setCoroutineContext(context: CoroutineContext) {
             this.coroutineContext = context
         }
@@ -88,7 +110,9 @@ class KEditor private constructor(
                 filters = filters,
                 coroutineContext = coroutineContext,
                 removeAudio = removeAudio,
-                removeVideo = removeVideo
+                removeVideo = removeVideo,
+                crf = crf,
+                preset = speed.preset
             )
     }
 
@@ -113,7 +137,9 @@ class KEditor private constructor(
             start = trimConfig.start.takeIf { it != Duration.ZERO },
             end = trimConfig.end.takeIf { it != Duration.INFINITE },
             removeAudio = removeAudio,
-            removeVideo = removeVideo
+            removeVideo = removeVideo,
+            preset = preset,
+            crf = crf
         )
     }
 

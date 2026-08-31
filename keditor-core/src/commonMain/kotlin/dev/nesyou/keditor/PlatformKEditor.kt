@@ -17,6 +17,8 @@ internal expect object PlatformKEditor {
         end: Duration?,
         removeAudio: Boolean,
         removeVideo: Boolean,
+        crf: Int?,
+        preset: String,
         progress: ProgressCallback
     )
 

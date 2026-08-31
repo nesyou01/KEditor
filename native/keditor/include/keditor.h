@@ -30,12 +30,15 @@ typedef struct AppContext {
     int out_video_stream_idx;
     ProgressCallback progress_cb;
     void *progress_user_data;
+    unsigned char use_filters;
     int64_t trim_start_us;
     int64_t trim_end_us;
     int audio_stream_idx;
     int out_audio_stream_idx;
     unsigned char remove_audio;
     unsigned char remove_video;
+    int crf;
+    const char *preset;
 } AppContext;
 
 
@@ -46,8 +49,10 @@ int apply_video_filter(
     const char *filter_descr,
     long start,
     long end,
-    unsigned char removeAudio,
-    unsigned char removeVideo,
+    unsigned char remove_audio,
+    unsigned char remove_video,
+    int crf,
+    const char *preset,
     ProgressCallback progress_callback
 );
 

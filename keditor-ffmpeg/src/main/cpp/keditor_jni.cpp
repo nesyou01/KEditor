@@ -96,6 +96,8 @@ Java_dev_nesyou_keditor_ffmpeg_AndroidMediaEditor_nativeApplyFilter(
         jlong end,
         jboolean removeAudio,
         jboolean removeVideo,
+        jint crf,
+        jstring preset,
         jobject progress
 ) {
     if (inputPath == nullptr ||
@@ -115,6 +117,9 @@ Java_dev_nesyou_keditor_ffmpeg_AndroidMediaEditor_nativeApplyFilter(
 
     const char *filterCStr =
             env->GetStringUTFChars(filterDescr, nullptr);
+
+    const char *presetCStr =
+            env->GetStringUTFChars(preset, nullptr);
 
     if (inputCStr == nullptr ||
             outputCStr == nullptr ||
@@ -244,6 +249,8 @@ Java_dev_nesyou_keditor_ffmpeg_AndroidMediaEditor_nativeApplyFilter(
             end,
             removeAudio,
             removeVideo,
+            crf,
+            presetCStr,
             progressHandler
     );
 
@@ -269,6 +276,11 @@ Java_dev_nesyou_keditor_ffmpeg_AndroidMediaEditor_nativeApplyFilter(
     env->ReleaseStringUTFChars(
             inputPath,
             inputCStr
+    );
+
+    env->ReleaseStringUTFChars(
+            preset,
+            presetCStr
     );
 
     env->ReleaseStringUTFChars(

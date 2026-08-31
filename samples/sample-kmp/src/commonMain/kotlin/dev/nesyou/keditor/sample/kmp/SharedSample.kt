@@ -12,7 +12,6 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import dev.nesyou.keditor.KEditor
-import dev.nesyou.keditor.filters.CropFilter
 import io.github.vinceglb.filekit.FileKit
 import io.github.vinceglb.filekit.absolutePath
 import io.github.vinceglb.filekit.cacheDir
@@ -57,16 +56,7 @@ fun SharedSample() {
                         val output = FileKit.cacheDir.resolve("output${nmb}.mp4")
 
                         val keditor = KEditor {
-                            removeAudio()
-
-                            filter(
-                                CropFilter(
-                                    width = 200,
-                                    height = 200,
-                                    startX = 0.0,
-                                    startY = 0.0
-                                )
-                            )
+                            compress()
                         }
 
                         keditor.process(
