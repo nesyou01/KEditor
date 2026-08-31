@@ -32,6 +32,10 @@ typedef struct AppContext {
     void *progress_user_data;
     int64_t trim_start_us;
     int64_t trim_end_us;
+    int audio_stream_idx;
+    int out_audio_stream_idx;
+    unsigned char remove_audio;
+    unsigned char remove_video;
 } AppContext;
 
 

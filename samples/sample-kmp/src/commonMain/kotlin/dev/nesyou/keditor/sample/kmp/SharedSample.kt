@@ -23,7 +23,6 @@ import io.github.vinceglb.filekit.readBytes
 import io.github.vinceglb.filekit.resolve
 import io.github.vinceglb.filekit.write
 import kotlinx.coroutines.launch
-import kotlin.time.Duration.Companion.seconds
 
 //
 // Created by Youness Lagmah on 8/24/26.
@@ -59,8 +58,6 @@ fun SharedSample() {
 
                         val keditor = KEditor {
                             removeAudio()
-
-                            trim(0.seconds, 300.seconds)
 
                             filter(
                                 CropFilter(
