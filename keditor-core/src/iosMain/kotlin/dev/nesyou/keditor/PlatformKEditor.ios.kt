@@ -9,6 +9,7 @@ import kotlinx.cinterop.StableRef
 import kotlinx.cinterop.asStableRef
 import kotlinx.cinterop.memScoped
 import kotlinx.cinterop.staticCFunction
+import kotlinx.cinterop.toByte
 import kotlin.time.Duration
 
 internal actual object PlatformKEditor {
@@ -48,7 +49,11 @@ internal actual object PlatformKEditor {
                 in_filename = input,
                 out_filename = output,
                 filter_descr = filters,
-                progress_callback = staticCFunction(::progressCallback)
+                progress_callback = staticCFunction(::progressCallback),
+                start = start?.inWholeMilliseconds ?: -1,
+                end = end?.inWholeMilliseconds ?: -1,
+                removeVideo = removeVideo.toByte().toUByte(),
+                removeAudio = removeAudio.toByte().toUByte()
             )
         }
     }
