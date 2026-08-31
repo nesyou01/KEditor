@@ -263,6 +263,10 @@ static int choose_encoder(AppContext *app) {
 
 /*
  * Build final filter chain.
+ *
+ * Only ever called when filter_descr is non-empty; init_filters
+ * (and therefore this function) is skipped entirely by run() when
+ * no filter was requested.
  */
 static int build_filter_chain(
     AppContext *app,
@@ -368,6 +372,8 @@ static int build_filter_chain(
 
 /*
  * Initialize video filter graph.
+ *
+ * Caller (run()) only invokes this when filter_descr is non-empty.
  */
 static int init_filters(
     AppContext *app,
@@ -613,35 +619,73 @@ static int open_output(
             return AVERROR(ENOMEM);
 
 
-        app->enc_ctx->height =
-                av_buffersink_get_h(
-                    app->buffersink_ctx
-                );
+        /*
+         * When a filter graph is active, pull the negotiated
+         * output geometry/format from the buffersink.
+         *
+         * When no filter graph was built (empty filter_descr),
+         * frames flow straight from the decoder to the encoder,
+         * so take the parameters from the decoder/input stream
+         * instead.
+         */
+        if (app->filter_graph) {
+            app->enc_ctx->height =
+                    av_buffersink_get_h(
+                        app->buffersink_ctx
+                    );
 
-        app->enc_ctx->width =
-                av_buffersink_get_w(
-                    app->buffersink_ctx
-                );
+            app->enc_ctx->width =
+                    av_buffersink_get_w(
+                        app->buffersink_ctx
+                    );
 
-        app->enc_ctx->sample_aspect_ratio =
-                av_buffersink_get_sample_aspect_ratio(
-                    app->buffersink_ctx
-                );
+            app->enc_ctx->sample_aspect_ratio =
+                    av_buffersink_get_sample_aspect_ratio(
+                        app->buffersink_ctx
+                    );
 
-        app->enc_ctx->pix_fmt =
-                av_buffersink_get_format(
-                    app->buffersink_ctx
-                );
+            app->enc_ctx->pix_fmt =
+                    av_buffersink_get_format(
+                        app->buffersink_ctx
+                    );
 
-        app->enc_ctx->time_base =
-                av_buffersink_get_time_base(
-                    app->buffersink_ctx
-                );
+            app->enc_ctx->time_base =
+                    av_buffersink_get_time_base(
+                        app->buffersink_ctx
+                    );
 
-        app->enc_ctx->framerate =
-                av_buffersink_get_frame_rate(
-                    app->buffersink_ctx
-                );
+            app->enc_ctx->framerate =
+                    av_buffersink_get_frame_rate(
+                        app->buffersink_ctx
+                    );
+        } else {
+            AVStream *in_video =
+                    app->in_fmt_ctx->streams[
+                        app->video_stream_idx
+                    ];
+
+            app->enc_ctx->height =
+                    app->dec_ctx->height;
+
+            app->enc_ctx->width =
+                    app->dec_ctx->width;
+
+            app->enc_ctx->sample_aspect_ratio =
+                    app->dec_ctx->sample_aspect_ratio;
+
+            app->enc_ctx->pix_fmt =
+                    app->dec_ctx->pix_fmt;
+
+            app->enc_ctx->time_base =
+                    in_video->time_base;
+
+            app->enc_ctx->framerate =
+                    av_guess_frame_rate(
+                        app->in_fmt_ctx,
+                        in_video,
+                        NULL
+                    );
+        }
 
         app->enc_ctx->bit_rate = 0;
 
@@ -964,6 +1008,9 @@ static int encode_and_write(
 
 /*
  * Filter + encode one video frame.
+ *
+ * Only used when a filter graph was actually built
+ * (app->filter_graph != NULL).
  */
 static int filter_encode_frame(
     AppContext *app,
@@ -1093,10 +1140,20 @@ static int decode_packet(
         );
 
 
-        ret = filter_encode_frame(
-            app,
-            frame
-        );
+        /*
+         * No filter graph (empty filter_descr) -> encode the
+         * decoded frame directly. Otherwise run it through the
+         * filter chain first.
+         */
+        ret = app->filter_graph
+                  ? filter_encode_frame(
+                        app,
+                        frame
+                    )
+                  : encode_and_write(
+                        app,
+                        frame
+                    );
 
 
         av_frame_unref(frame);
@@ -1310,13 +1367,23 @@ static int run(
             return ret;
 
 
-        ret = init_filters(
-            app,
-            filter_descr
-        );
+        /*
+         * Only build a filter graph when a filter was actually
+         * requested. With an empty/NULL filter_descr, frames are
+         * passed from decoder to encoder unmodified
+         * (app->filter_graph stays NULL and is used elsewhere as
+         * the "filtering active" flag).
+         */
+        if (filter_descr &&
+            filter_descr[0] != '\0') {
+            ret = init_filters(
+                app,
+                filter_descr
+            );
 
-        if (ret < 0)
-            return ret;
+            if (ret < 0)
+                return ret;
+        }
     }
 
 
@@ -1519,8 +1586,11 @@ static int run(
 
     /*
      * Flush filter graph.
+     *
+     * Only needed when a filter graph was actually built.
      */
     if (!app->remove_video &&
+        app->filter_graph &&
         ret >= 0) {
         ret = filter_encode_frame(
             app,

@@ -56,7 +56,7 @@ fun SharedSample() {
                         val output = FileKit.cacheDir.resolve("output${nmb}.mp4")
 
                         val keditor = KEditor {
-                            compress()
+                            compress(0)
                         }
 
                         keditor.process(
