@@ -25,23 +25,20 @@ KEditor is designed for **Android and iOS** applications and can be integrated i
 * 🤖 Android support
 * 🍎 iOS support
 
-## 📦 Architecture
+## 🤖 Supported Architectures
 
-KEditor is split into two modules:
+KEditor currently supports the following CPU architectures:
 
-```text
-KEditor
-├── keditor-core
-└── keditor-ffmpeg
-```
+* **Android**
 
-### `keditor-core`
+    * `arm64-v8a`
+    * `x86_64`
+* **iOS**
 
-Contains the platform-independent KEditor API, configuration classes, filters, callbacks, and editing logic.
+    * `arm64`
+* **iOS Simulator**
 
-### `keditor-ffmpeg`
-
-Contains the FFmpeg-based implementation used to process media files on Android until Kotlin Multiplatform adds official NDK support: [Google Issue Tracker #439746703](https://issuetracker.google.com/issues/439746703).
+    * `arm64` (Apple Silicon)
 
 
 
