@@ -17,7 +17,6 @@ import kotlin.time.Duration
 
 
 /**
-
  * Main entry point for processing and editing video files.
  *
  * [KEditor] provides a Kotlin API for common video editing operations such as:
@@ -51,20 +50,17 @@ compress(quality = 70)
  */
 class KEditor private constructor(
     /**
-
      * Configuration describing the section of the input video that should
      * be processed.
      */
     private val trimConfig: TrimConfig,
 
     /**
-
      * Collection of filters that will be applied to the video.
      */
     private val filters: Collection<Filter>,
 
     /**
-
      * Coroutine context used to execute the video processing operation.
      *
      * The default context is [Dispatchers.IO], since video processing is
@@ -73,19 +69,16 @@ class KEditor private constructor(
     private val coroutineContext: CoroutineContext,
 
     /**
-
      * Whether the audio stream should be removed from the output.
      */
     private val removeAudio: Boolean,
 
     /**
-
      * Whether the video stream should be removed from the output.
      */
     private val removeVideo: Boolean,
 
     /**
-
      * Optional Constant Rate Factor (CRF) value used for video encoding.
      *
      * A lower CRF generally produces higher quality and a larger file,
@@ -94,7 +87,6 @@ class KEditor private constructor(
     private val crf: Int?,
 
     /**
-
      * Encoding preset used by the underlying video encoder.
      *
      * The preset is derived from the configured [Speed].
@@ -103,7 +95,6 @@ class KEditor private constructor(
 ) {
 
     /**
-
      * Builder used to configure a [KEditor] instance.
      *
      * This class provides a DSL-style API for configuring video processing
@@ -112,7 +103,6 @@ class KEditor private constructor(
     class Config {
 
         /**
-
          * Trim configuration.
          *
          * [TrimConfig.UNSET] means that no trimming is requested.
@@ -120,19 +110,16 @@ class KEditor private constructor(
         private var trimConfig: TrimConfig = TrimConfig.UNSET
 
         /**
-
          * Indicates whether audio should be removed.
          */
         private var removeAudio: Boolean = false
 
         /**
-
          * Indicates whether video should be removed.
          */
         private var removeVideo: Boolean = false
 
         /**
-
          * Controls the encoding speed/preset.
          *
          * Defaults to [Speed.Medium].
@@ -140,7 +127,6 @@ class KEditor private constructor(
         private var speed: Speed = Speed.Medium
 
         /**
-
          * Optional CRF value used for compression.
          *
          * `null` means that no explicit CRF value was configured.
@@ -148,7 +134,6 @@ class KEditor private constructor(
         private var crf: Int? = null
 
         /**
-
          * Coroutine context used when processing the video.
          *
          * Defaults to [Dispatchers.IO].
@@ -156,13 +141,11 @@ class KEditor private constructor(
         private var coroutineContext: CoroutineContext = Dispatchers.IO
 
         /**
-
          * Filters configured by the user.
          */
         private val filters = mutableListOf<Filter>()
 
         /**
-
          * Sets the trim configuration.
          */
         fun trim(config: TrimConfig) {
@@ -170,7 +153,6 @@ class KEditor private constructor(
         }
 
         /**
-
          * Removes the audio stream from the output video.
          */
         fun removeAudio() {
@@ -178,7 +160,6 @@ class KEditor private constructor(
         }
 
         /**
-
          * Enables the audio stream.
          *
          * Calling this after [removeAudio] cancels the audio removal.
@@ -188,7 +169,6 @@ class KEditor private constructor(
         }
 
         /**
-
          * Removes the video stream from the output.
          */
         fun removeVideo() {
@@ -196,7 +176,6 @@ class KEditor private constructor(
         }
 
         /**
-
          * Enables the video stream.
          *
          * Calling this after [removeVideo] cancels the video removal.
@@ -206,7 +185,6 @@ class KEditor private constructor(
         }
 
         /**
-
          * Trims the video between [start] and [end].
          */
         fun trim(start: Duration, end: Duration) {
@@ -219,7 +197,6 @@ class KEditor private constructor(
         }
 
         /**
-
          * Trims the video from the beginning up to [end].
          */
         fun trim(end: Duration) {
@@ -230,7 +207,6 @@ class KEditor private constructor(
         }
 
         /**
-
          * Adds multiple [Filter] instances to the video.
          *
          * Filters are applied in the same order in which they are added.
@@ -240,7 +216,6 @@ class KEditor private constructor(
         }
 
         /**
-
          * Adds a single [Filter] to the video.
          */
         fun filter(filter: Filter) {
@@ -248,7 +223,6 @@ class KEditor private constructor(
         }
 
         /**
-
          * Sets the encoding speed.
          *
          * The configured [Speed] is converted to the corresponding encoder
@@ -261,7 +235,6 @@ class KEditor private constructor(
         }
 
         /**
-
          * Configures video compression quality.
          *
          * [quality] must be between 0 and 100.
@@ -289,7 +262,6 @@ class KEditor private constructor(
         }
 
         /**
-
          * Sets the coroutine context used during video processing.
          *
          * This can be useful when the caller wants to control the dispatcher
@@ -300,7 +272,6 @@ class KEditor private constructor(
         }
 
         /**
-
          * Creates the configured [KEditor] instance.
          *
          * This method is internal because users normally create [KEditor]
@@ -343,7 +314,6 @@ class KEditor private constructor(
     }
 
     /**
-
      * Processes the input video and writes the result to [output].
      *
      * The operation is executed inside [coroutineContext] and therefore

@@ -5,7 +5,6 @@ package dev.nesyou.keditor.filters
 //
 
 /**
-
  * Changes the presentation timestamp (PTS) of video frames.
  *
  * This filter uses FFmpeg's `setpts` filter to modify the timing
@@ -29,7 +28,6 @@ class PTSFilter(
 ) : Filter {
 
     /**
-
      * Builds the FFmpeg `setpts` filter expression.
      */
     override fun build(): String =

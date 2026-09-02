@@ -5,7 +5,6 @@ package dev.nesyou.keditor.filters
 //
 
 /**
-
  * Represents a video filter that can be applied by [KEditor].
  *
  * Implementations are responsible for converting their configuration
@@ -25,7 +24,6 @@ package dev.nesyou.keditor.filters
 interface Filter {
 
     /**
-
      * Builds the FFmpeg filter expression for this filter.
      *
      * @return An FFmpeg-compatible filter expression.

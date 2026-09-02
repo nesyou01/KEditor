@@ -5,7 +5,6 @@ package dev.nesyou.keditor.filters
 //
 
 /**
-
  * Adjusts the hue and saturation of a video.
  *
  * This filter uses FFmpeg's `hue` video filter to modify the color

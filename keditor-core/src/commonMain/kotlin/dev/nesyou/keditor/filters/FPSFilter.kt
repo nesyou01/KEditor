@@ -5,7 +5,6 @@ package dev.nesyou.keditor.filters
 //
 
 /**
-
  * Changes the frame rate of a video.
  *
  * This filter uses FFmpeg's `fps` video filter to convert the input

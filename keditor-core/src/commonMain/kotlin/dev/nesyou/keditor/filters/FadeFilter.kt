@@ -5,7 +5,6 @@ package dev.nesyou.keditor.filters
 //
 
 /**
-
  * Applies a fade-in or fade-out effect to a video.
  *
  * This filter uses FFmpeg's `fade` video filter and supports configuring
@@ -25,7 +24,6 @@ class FadeFilter(
 ) : Filter {
 
     /**
-
      * Specifies whether the filter should fade the video in or out.
      */
     enum class Type {
@@ -37,7 +35,6 @@ class FadeFilter(
     }
 
     /**
-
      * Builds the FFmpeg `fade` filter expression.
      */
     override fun build(): String =

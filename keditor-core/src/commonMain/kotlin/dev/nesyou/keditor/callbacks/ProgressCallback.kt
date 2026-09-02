@@ -5,7 +5,6 @@ package dev.nesyou.keditor.callbacks
 //
 
 /**
-
  * Callback used to receive video processing progress updates.
  *
  * The callback is invoked during video processing with the current
@@ -30,7 +29,6 @@ println("Progress: ${progress * 100}%")
 fun interface ProgressCallback {
 
     /**
-
      * Called when the processing progress changes.
      *
      * @param progress Current processing progress, where `0.0` represents

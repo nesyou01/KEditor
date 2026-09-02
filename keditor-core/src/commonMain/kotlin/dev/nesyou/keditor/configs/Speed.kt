@@ -7,7 +7,6 @@ import kotlin.jvm.JvmInline
 //
 
 /**
-
  * Represents the encoding speed/preset used when processing a video.
  *
  * The available presets provide a trade-off between encoding speed

@@ -81,10 +81,12 @@ The exact configuration can be extended with editing options such as trimming, f
 KEditor supports trimming videos using Kotlin's `Duration` API.
 
 ```kotlin
-val config = TrimConfig(
-    start = 10.seconds,
-    end = 30.seconds
-)
+KEditor {
+    trim(
+        start = 10.seconds,
+        end = 30.seconds
+    )
+}
 ```
 
 For example, this extracts the section between 10 and 30 seconds.
@@ -136,6 +138,7 @@ GBlurFilter(
     sigma = 10.0
 )
 ```
+
 ## 🐇 Change Video Speed
 
 KEditor provides a `Speed` configuration for modifying playback speed.

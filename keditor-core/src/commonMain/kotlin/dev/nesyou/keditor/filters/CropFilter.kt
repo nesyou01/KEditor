@@ -7,7 +7,6 @@ import kotlin.math.roundToInt
 //
 
 /**
-
  * Crops a video to a specified rectangular region.
  *
  * The crop area can be defined either by its position and dimensions
@@ -43,7 +42,6 @@ class CropFilter(
 ) : Filter {
 
     /**
-
      * Creates a crop filter using the boundaries of the crop area.
      *
      * The resulting width is calculated as `end - start`, while the

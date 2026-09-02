@@ -8,7 +8,6 @@ import kotlin.time.Duration
 //
 
 /**
-
  * Defines the portion of a video that should be processed.
  *
  * @param start Start position of the trim. Defaults to [Duration.ZERO].

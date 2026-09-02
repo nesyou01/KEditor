@@ -5,7 +5,6 @@ package dev.nesyou.keditor.filters
 //
 
 /**
-
  * Rotates a video by the specified angle.
  *
  * This filter uses FFmpeg's `rotate` video filter. Areas exposed by

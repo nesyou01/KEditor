@@ -5,7 +5,6 @@ package dev.nesyou.keditor.filters
 //
 
 /**
-
  * Applies a box blur effect to the video.
  *
  * The filter allows independent configuration of the luma and chroma
@@ -45,7 +44,6 @@ class BoxBlurFilter(
 ) : Filter {
 
     /**
-
      * Builds the FFmpeg `boxblur` filter expression.
      */
     override fun build(): String = buildString {
