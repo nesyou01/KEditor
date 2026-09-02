@@ -54,8 +54,10 @@ internal actual object PlatformKEditor {
                 progress_callback = staticCFunction(::progressCallback),
                 start = start?.inWholeMilliseconds ?: -1,
                 end = end?.inWholeMilliseconds ?: -1,
-                removeVideo = removeVideo.toByte().toUByte(),
-                removeAudio = removeAudio.toByte().toUByte()
+                remove_video = removeVideo.toByte().toUByte(),
+                remove_audio = removeAudio.toByte().toUByte(),
+                crf = crf ?: -1,
+                preset = preset
             )
         }
     }
