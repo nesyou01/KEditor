@@ -13,9 +13,8 @@ tasks.register<Exec>("buildNativeLibs") {
     commandLine("bash", "../scripts/setup.sh")
 }
 
-
 tasks.matching {
-    it.name == "commonizeNativeDistribution"
+    it.name == "cinteropKeditorIosArm64"
 }.configureEach {
     dependsOn("buildNativeLibs")
 }
