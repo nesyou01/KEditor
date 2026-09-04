@@ -39,7 +39,7 @@ jobs:
         run: |
           NDK="$ANDROID_SDK_ROOT/ndk/${ANDROID_NDK_VERSION}"
           
-          TOOLCHAIN="$NDK/toolchains/llvm/prebuilt/darwin-x86_64"
+          TOOLCHAIN="$NDK/toolchains/llvm/prebuilt/darwin-x86_64/bin"
           
           echo "ANDROID_NDK_HOME=$NDK" >> "$GITHUB_ENV"
           echo "TOOLCHAIN=$TOOLCHAIN" >> "$GITHUB_ENV"
@@ -49,8 +49,8 @@ jobs:
 
       - name: Verify NDK Toolchain
         run: |
-          "$TOOLCHAIN/bin/clang" --version
-          "$TOOLCHAIN/bin/llvm-ar" --version
+          "$TOOLCHAIN/clang" --version
+          "$TOOLCHAIN/llvm-ar" --version
 
       - name: Publish to MavenCentral
         run: ./gradlew publishToMavenCentral --no-configuration-cache
