@@ -37,7 +37,7 @@ jobs:
         run: |
           NDK="$ANDROID_SDK_ROOT/ndk/${ANDROID_NDK_VERSION}"
           
-          TOOLCHAIN="$NDK/toolchains/llvm/prebuilt/darwin-x86_64/bin"
+          TOOLCHAIN="$NDK/toolchains/llvm/prebuilt/darwin-x86_64"
           
           echo "ANDROID_NDK_HOME=$NDK" >> "$GITHUB_ENV"
           echo "TOOLCHAIN=$TOOLCHAIN" >> "$GITHUB_ENV"
