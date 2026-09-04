@@ -7,6 +7,20 @@ plugins {
     alias(libs.plugins.vanniktech.mavenPublish)
 }
 
+tasks.register<Exec>("buildNativeLibs") {
+    description = "Build native libraries"
+
+    commandLine("bash", "../scripts/setup.sh")
+}
+
+
+tasks.matching {
+    it.name == "commonizeNativeDistribution"
+}.configureEach {
+    dependsOn("buildNativeLibs")
+}
+
+
 kotlin {
     android {
         namespace = "dev.nesyou.keditor"
