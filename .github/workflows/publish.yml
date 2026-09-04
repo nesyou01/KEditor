@@ -1,19 +1,55 @@
 name: Publish
+
 on:
   release:
     types: [released, prereleased]
+
+permissions:
+  contents: read
+
+env:
+  ANDROID_NDK_VERSION: "27.0.12077973"
+
 jobs:
   publish:
     name: Release build and publish
-    runs-on: macOS-latest
+    runs-on: macos-latest
+
     steps:
       - name: Check out code
         uses: actions/checkout@v4
+
       - name: Set up JDK 21
         uses: actions/setup-java@v4
         with:
-          distribution: 'zulu'
-          java-version: 21
+          distribution: "zulu"
+          java-version: "21"
+
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Install Android NDK
+        run: |
+          sdkmanager "ndk;${ANDROID_NDK_VERSION}"
+
+      - name: Configure NDK Toolchain
+        shell: bash
+        run: |
+          NDK="$ANDROID_SDK_ROOT/ndk/${ANDROID_NDK_VERSION}"
+          
+          TOOLCHAIN="$NDK/toolchains/llvm/prebuilt/darwin-x86_64/bin"
+          
+          echo "ANDROID_NDK_HOME=$NDK" >> "$GITHUB_ENV"
+          echo "TOOLCHAIN=$TOOLCHAIN" >> "$GITHUB_ENV"
+          
+          echo "ANDROID_NDK_HOME=$NDK"
+          echo "TOOLCHAIN=$TOOLCHAIN"
+
+      - name: Verify NDK Toolchain
+        run: |
+          "$TOOLCHAIN/bin/clang" --version
+          "$TOOLCHAIN/bin/llvm-ar" --version
+
       - name: Publish to MavenCentral
         run: ./gradlew publishToMavenCentral --no-configuration-cache
         env:
@@ -22,4 +58,3 @@ jobs:
           ORG_GRADLE_PROJECT_signingInMemoryKeyId: ${{ secrets.SIGNING_KEY_ID }}
           ORG_GRADLE_PROJECT_signingInMemoryKeyPassword: ${{ secrets.SIGNING_PASSWORD }}
           ORG_GRADLE_PROJECT_signingInMemoryKey: ${{ secrets.GPG_KEY_CONTENTS }}
-
