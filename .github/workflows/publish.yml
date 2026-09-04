@@ -47,10 +47,9 @@ jobs:
           echo "ANDROID_NDK_HOME=$NDK"
           echo "TOOLCHAIN=$TOOLCHAIN"
 
-      - name: Verify NDK Toolchain
+      - name: Install NASM
         run: |
-          "$TOOLCHAIN/clang" --version
-          "$TOOLCHAIN/llvm-ar" --version
+          brew install nasm
 
       - name: Publish to MavenCentral
         run: ./gradlew publishToMavenCentral --no-configuration-cache
