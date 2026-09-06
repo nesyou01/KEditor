@@ -49,4 +49,10 @@ mavenPublishing {
     publishToMavenCentral()
 
     signAllPublications()
+
+    coordinates(null, "keditor", null)
+
+    pom {
+        name = "KEditor"
+    }
 }

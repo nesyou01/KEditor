@@ -1,5 +1,7 @@
 plugins {
     id("dev.nesyou.android.library")
+
+    alias(libs.plugins.vanniktech.mavenPublish)
 }
 
 android {
@@ -24,6 +26,18 @@ android {
         cmake {
             path = file("src/main/cpp/CMakeLists.txt")
         }
+    }
+}
+
+mavenPublishing {
+    publishToMavenCentral()
+
+    signAllPublications()
+
+    coordinates(null, "keditor-ffmpeg", null)
+
+    pom {
+        name = "KEditorFFmpeg"
     }
 }
 
