@@ -48,7 +48,7 @@ Add the required KEditor dependencies to your project.
 
 ```kotlin
 dependencies {
-    implementation("dev.nesyou:keditor-core:<version>")
+    implementation("io.github.nesyou01:keditor:<version>")
 }
 ```
 
